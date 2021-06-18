@@ -374,6 +374,94 @@ knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwiens
 ```
 knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwienschrecks und den Wildschweinen")
 
+
+```{r Sabine und Wildschweinschreck 2015_04 (Standardeinstellung) werden näher betrachetet }
+# ich möchte Sabine nun genauer untersuchen
+
+Sabine <- Sabine %>%
+  mutate(steplength = sqrt((X-lead(X))^2+(Y-lead(Y))^2), # in meters
+         timelag = as.numeric(difftime(lead(DatetimeUTC),DatetimeUTC,units = "secs")), # in seconds
+         speed = steplength/timelag) # in meters per second
+
+
+# es werden drei zweitpunkte festgelegt, um 2 Zeitintervalle zu untersuchen. dies sind der Zeitpunkt eine Woche vor dem Schreck, der Zeitpunkt am Datum_on des Schrecks, und der Zeitpunkt 1 Woche nach Einschalten des Schrecks. die Zeitspannend daziwschen sind zu untersuchen:
+schreck_agenda_2015_04 <- filter(schreck_agenda_relevant,id=="WSS_2015_04")
+t2_WSS_2015_04 <- min(schreck_agenda_2015_04$datum_on)
+t1_WSS_2015_04 <- t2_WSS_2015_04-days(7)
+t3_WSS_2015_04 <- t2_WSS_2015_04+days(7)
+
+Sabine_t1_t2_04 <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_04 & DatetimeUTC < t2_WSS_2015_04 )
+
+Sabine_t2_t3_04 <- Sabine%>%
+  filter(DatetimeUTC > t2_WSS_2015_04 & DatetimeUTC < t3_WSS_2015_04 )
+
+ggplot() +
+  geom_path(data = Sabine_t1_t2_04, aes(X,Y, color="before")) +
+  geom_point(data = schreck_agenda_2015_04, aes(X,Y, color="Schreck")) +
+  geom_path(data = Sabine_t2_t3_04, aes(X,Y, color="after")) +
+  labs(color="Trajectory", title = "Der Vergleich von Sabine vor und nach dem Schreck")  +
+  theme_minimal()
+# Der Wildschweinschreck scheint gar keinen Einfluss auf das Verhalten von Sabine zu haben. Vielleicht ein anderer Wildschweinschreck?
+
+
+# dasselbe Vorgehen einfach mit einem anderen Schreck: 
+schreck_agenda_2015_01 <- filter(schreck_agenda_relevant,id=="WSS_2015_01")
+t2_WSS_2015_01 <- min(schreck_agenda_2015_01$datum_on)
+t1_WSS_2015_01 <- t2_WSS_2015_01-days(2)
+t3_WSS_2015_01 <- t2_WSS_2015_01+days(2)
+
+Sabine_t1_t2_01 <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_01 & DatetimeUTC < t2_WSS_2015_01 )
+
+Sabine_t2_t3_01 <- Sabine%>%
+  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01 )
+
+ggplot() +
+  geom_path(data = Sabine_t1_t2_01, aes(X,Y, color="before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
+  geom_path(data = Sabine_t2_t3_01, aes(X,Y, color="after")) +
+  labs(color="Trajectory", title = "Der Vergleich von Sabine vor und nach dem Schreck")  +
+  theme_minimal()
+# auch hier scheint der Schreck keinen Einfluss nehmen zu können.
+
+
+# deshalb wird zum schluss noch  Olga untersucht
+Olga_t1_t2_01 <- Olga%>%
+  filter(DatetimeUTC > t1_WSS_2015_01 & DatetimeUTC < t2_WSS_2015_01)
+
+Olga_t2_t3_01 <- Olga%>%
+  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01 )
+
+
+ggplot() +
+  geom_path(data = Olga_t1_t2_01, aes(X,Y, color="before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
+  geom_path(data = Olga_t2_t3_01, aes(X,Y, color="after")) +
+  labs(color="Trajectory", title = "Der Vergleich von Olga vor und nach dem Schreck") +
+  theme_minimal()
+  
+  
+# auch hier ist kein Einfluss des Wildschweinschrecks auf das Wildschwein zu erkennen. Um nochmal genauer hinzuschauen, werden nur noch die Trajectories bei Nacht untersucht. dies hilft den genauen Zeitp
+
+Olga_t1_t2_01_nacht <- Olga_t1_t2_01 %>%
+  filter(day != "Tag")
+  
+Olga_t2_t3_01_nacht <- Olga_t2_t3_01 %>%
+  filter(day != "Tag") 
+
+ggplot() +
+  geom_path(data = Olga_t1_t2_01_nacht, aes(X,Y, color="before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
+  geom_path(data = Olga_t2_t3_01_nacht, aes(X,Y, color="after")) +
+  labs(color="Trajectory", title = "Der Vergleich von Olga vor und nach dem Schreck - nur bei Nacht") +
+  theme_minimal()
+
+# wiederum ist kein Einfluss zu erkennen. 
+  
+```
+
+
 ```{r Hintergrundmap einfügen, echo=T, results='hide', message=F, warning=F }
 crop_fanel <- read_sf("Feldaufnahmen_Fanel.gpkg")
 
