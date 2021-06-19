@@ -42,30 +42,38 @@ schreck_locations<-schreck_locations
 ```
 
 
-## Das Sampling Regime der Wildschweine
-```{r Nils Plot on sampling regime, echo=T, results='hide', message=F, warning=F}
+
+```{r Nils Code on sampling regime, include=F, eval=T}
 limits <- c(0,200)
 breaks = seq(0,200,50)
 labels = paste(c(rep("",length(breaks)-1),">"), breaks)
 
-wildschwein_BE %>%
+wildschwein_BE<-wildschwein_BE %>%
   mutate(TierName = fct_reorder(TierName, DatetimeUTC,min, .desc = TRUE)) %>%
   group_by(TierID, TierName, CollarID) %>%
   mutate(
     timelag = as.numeric(difftime(lead(DatetimeUTC),DatetimeUTC, units = "mins")),
-    ) %>%
-  ggplot(aes(DatetimeUTC, TierName, colour = timelag)) +
+    )
+
+
+```
+
+#### 1. Übersicht der getrackten 19 Wildschweine im Originaldatensatz für die Definition des maximal zu untersuchenden Zeitintervalls
+Minimum-Datum: 2014-05-28, Maximum-Datum: 2016-10-18
+```{r Plot_sampling_regime, echo=F, results='hide', message=F, warning=F}
+ggplot(wildschwein_BE,aes(DatetimeUTC, TierName, colour = timelag)) +
   geom_line(lwd = 10) +
   scale_color_gradientn(name = "Sampling interval", colours = RColorBrewer::brewer.pal(11, "Spectral"), limits = limits, na.value = NA, oob = scales::squish, breaks = seq(0,200,50), labels = labels) +
   theme_minimal() +
   theme(legend.position = "top") +
   guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barwidth = unit(20, "lines"), barheight = unit(.5, "lines")))
-
 ```
 
 
-## Die geografischen Zusammenhänge zwischen den Wildschweinen un den Wildschwein-Schrecks
-```{r Überblick über den geografischen Overlap zwischen den Wildschweinen und den Wildschwein-Schrecks, echo=T, results='hide', message=F, warning=F}
+#### 2. Geografische Zusammenhänge zwischen den Wildschweinen und den Wildschweinschrecks:
+Visualisierung der Aufenthaltsgebiete mit allen vorhandenen Positionspunkte pro Individuum, um die maximale räumliche Ausdehnung darstellen zu können.
+
+```{r spatial_overlaps, echo=F, results='hide', message=F, warning=F}
 # Ortsbezogne Wildschweindaten werden  CRS 2056 zugewiesen
 wildschwein_sf <- wildschwein_BE %>%
   st_as_sf(coords = c("E", "N"), crs = 2056) %>%
@@ -91,12 +99,12 @@ wildschwein_convex_hull <- wildschwein_sf %>%
   summarise() %>%
   st_convex_hull()
 
-wildschwein_convex_hull %>%
-  mutate(tiercollar = paste(TierID, TierName, CollarID))%>%
-  ggplot(aes(fill = factor(TierID))) + geom_sf(alpha = 0.1) +
-  coord_sf(datum = 2056) +
-  facet_wrap(~tiercollar) +
-  theme(legend.position = "none")
+# wildschwein_convex_hull %>%
+#   mutate(tiercollar = paste(TierID, TierName, CollarID))%>%
+#   ggplot(aes(fill = factor(TierID))) + geom_sf(alpha = 0.1) +
+#   coord_sf(datum = 2056) +
+#   facet_wrap(~tiercollar) +
+#   theme(legend.position = "none")
 
 wildschwein_convex_hull %>%
   mutate(tiercollar = paste(TierID, TierName, CollarID))
@@ -108,8 +116,12 @@ plot_boars_schreck<-ggplot()+
   coord_sf(datum = 2056)+
   theme(legend.position = "none")
 
-ggplotly(plot_boars_schreck)
+plot_boars_schreck
+```
 
+
+Wildschweinschrecks herausfiltern, die nicht in den Convex-Hulls der Wildschweine sind, d.h. in deren Nähe sich die Wildschweine nicht aufgehalten haben --> explorativ gemäss dem Plot, indem die Koordinaten eingegrenzt werden (X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000). Feststellung: Viele Schrecks liegen ausserhalb des Aufenthaltsgebietes der Wildschweine.
+```{r relevant_spatial_overlaps, echo=F, results='hide', message=F, warning=F}
 # jetzt können alle Wildschweinschrecks rausgefiltert werden, die nicht in den convex hulls sind. Viele der Wildschweinschrecks sind ausserhalb des Aufenthaltsgebiets von Wildschweinen. Wir machen das explorativ, d.h. wir grenzen die Koordinaten gemäss dem Plot ein.
 WSS_sf_relevant <- WSS_sf%>%
   filter(X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000) # Alle Wildschwienschrecks im näheren Umkreis der Wildschwein-Aufethaltsgebiete sind in WSS_sf_relevant gespiechert
@@ -124,8 +136,12 @@ plot_boars_schreck_rel<-ggplot()+
 plot_boars_schreck_rel
 ```
 
-## Die zeitlich und geografisch relevanten Wildschweinschrecks in Abhängigkeit der Wildschweindaten
-```{r  Zeitbezogene Daten des Wildscheinschrecks, echo=T, results='hide', message=F, warning=F}
+
+
+####	3. Zeitlich und geografisch relevante Wildschweinschrecks in Abhängigkeit von den Wildschweindaten
+Alle Daten der Schrecks löschen, die sich nicht mit den zeitlichen Wildschweindaten überschneiden, bzw. die vor und nach dem Tracking der Wildschweine laufen (Aus Task 1)
+
+```{r  spatio-temporal-relevant-schrecks, echo=F, results='hide', message=F, warning=F}
 
 # alle Daten die sich nicht mit den Wilschweinen überschneiden löschen
 summary(wildschwein_BE$DatetimeUTC)
@@ -142,11 +158,17 @@ schreck_agenda_relevant$modus<-as.factor(schreck_agenda_relevant$modus)
 
 ggplot(schreck_agenda_relevant, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
          geom_errorbarh(aes(color = modus))
+
+# udn ein kurzer Blick in alle Schreck-Daten:
+# ggplot(schreck_agenda, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
+#          geom_errorbarh(aes(color = modus))
 ```
 
 
-## Die Herausfilterung der Wildschweindaten, deren gemessenen Zeitperioden sich über die der relevanten Wildschweinschrecks ausweitet
-```{r welche wildschweine werden zeitgleich mit dem Wildschweinschreck-Alarm gemessen, echo=T, results='hide', message=F, warning=F}
+#### 4. Wildschweine, deren Zeitintervalle sich mit denjenigen der relevanten Wildschweinschrecks überlappen
+Wildschweine herausfiltern mit Trackingdaten vor, im Verlauf und nach der Schreck-Laufdauer.
+
+```{r welche wildschweine werden zeitgleich mit dem Wildschweinschreck-Alarm gemessen, echo=F, results='hide', message=F, warning=F}
 
 # Nachfolgend werden die Samplingperioden mit den Werten mix und max pro Tier und Halsband identifiziert
 sampling_periods <- wildschwein_BE %>%
@@ -190,8 +212,8 @@ plot_boars_schreck_rel_spattemp<-ggplot()+
 plot_boars_schreck_rel_spattemp
 ```
 
-## Farbcodes zu den Wildschweinen zuordnen
-```{r Farbcodes zu den Wildschweinen zuordnen, echo=T, results='hide', message=F, warning=F}
+#### Zwischenschritt: Farbcodes zu den Wildschweinen zuordnen
+```{r Farbcodes zu den Wildschweinen zuordnen, echo=F, results='hide', message=F, warning=F}
 # Hierzu verwenden wir Colorbrewer 2.0 https://colorbrewer2.org/#type=diverging&scheme=RdYlBu&n=5
 Farbset<-c("2 Sabine 12275" = "#d7191c",
            "36 Olga 13976" = "#fdae61",
@@ -213,8 +235,10 @@ plot_boars_schreck_rel_spattemp
 
 ```
 
-## die Überlappungen der Wildschweine mit den einzelnen Wildschweinschrecks
-```{r die Überlappungen der Wildschweine mit den einzelnen Wildschweinschrecks darstellen, echo=T, results='hide', message=F, warning=F}
+#### 5. Die Überlappungen der Wildschweine mit den einzelnen Wildschweinschrecks
+Da das Wildschweinverhalten vor und nach der Testphase der Wildschweinschrecks untersucht werden soll, muss untersucht werden, welche Wildschwein-Messungen sich mit welchem Wildschweinschreck-Testphasen überlappen und wie viel. 
+
+```{r overlaps, echo=F, results='hide', message=F, warning=F}
 # Timelag bestimmen für jeden Wildschweinschreck, um zu schauen, wie lange diese jeweils angemacht sind.
 schreck_agenda_relevant <- schreck_agenda_relevant %>%
   mutate(timelag_days = as.numeric(difftime(datum_off, datum_on, unit = "days")))
@@ -246,8 +270,24 @@ ggplot()+
 
 ```
 
-## Die Minimaldistanz zu den Wildschweinschrecks
-```{r die Minimaldistanz zu den Wildschweinschrecks bestimmen, echo=F, message=F, warning=F}
+Als Zwischenfazit nach der Explorativen Analyse konnte folgendes herausgefunden werden:
+-	Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird voraussichtlich ausgeschlossen)
+-	Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
+-	Venus ist für die Analyse von «WSS_2016_01», «WSS_2016_05» und «WSS_2016_06» geeignet
+-	Die initial grossen Datensätze mit vielen irrelevanten Schweinen und Wildschweinschrecks konnten stark reduziert werden. 
+-	Die Zeitperioden der verbleibenden Wildschweine überlappen diejenigen der Wildschweinschrecks vor und nach der Testphase .
+
+
+## Research Question 1 
+> Wie kann der Effekt-Range der Wildschwein-Schrecks von den räumlichen Laufbahnen der Wildschweine hergeleitet werden? 
+
+Eine Studie der ZHAW erklärt folgendes: "Die Wahrscheinlichkeit, dass der nächtliche Immissionsgrenzwert von 55 dB(A) durch die Geräusche des Wildschweinschrecks bei Einstellung der maximalen Lautstärke überschritten wird, liegt bei den Distanzen von 2m, 10m und 50m bei 100%. Bei 100m und 200m liegt diese Wahrscheinlichkeit immer noch bei über 90%, hingegen bei 500m nur noch bei 20%. Bei 1000m Distanz liegt die Wahrscheinlichkeit der Überschreitung der gesetzlichen Immissionsgrenzwerte bei 0% und ab 1500m sind keine Geräusche mehr messbar (Krähenmann 2015).» (Suter et al., 2018, 23f.). Entsprechend wird hier angenommen, dass mindestens bei 200 Meter doch noch einen Einfluss vermutbar wäre. 
+
+Als datenbasierte mögliche Messgrösse könnte Beispielsweise der Abstand zum Schreck, nach Ertönen des Signaltons analysiert werden (z.B. 1h nach nach dem Schreck). Dazu muss aber zuerst analysiert werden, welche Wildschweine sich denn in der nähe welches Schrecks aufhalten. Dazu wird die Minimaldistanz zu den in der Explorativen Analyse definierten relevanten Schrecks und Wildschweinen analysiert.
+
+Die folgende Tabelle stellt die Minimaldistanzen zum Wildschwienschreck pro Wildschwein dar. Unter der vorher getroffenen Annahme von 200 Meter Einflussbereich, würde mindestens Sabine von drei Wildschwieinschrecks beeinflusst werden, sowie Olga von einem. 
+
+```{r minimal distance, include=F}
 #wieder Wildschwein_sf_relevant und schreck_agenda_relevant arbeiten. Wie bringen wir die zwei Tabellen zusammen?
 
 # Daten studieren:
@@ -362,6 +402,7 @@ min(Franz$distance_2015_03) ## die Minimaldistanz ist 704 Meter, das heisst, das
 min(Franz$distance_2015_04) ## die Minimaldistanz ist 401 Meter, das heisst, dass Franz wohl kaum von diesem Schreck beeinflusst wird.
 
 
+
 Mind_dist_table <-data.frame(WSS=c("2015_01","2015_03","2015_04", "2016_01","2016_05","2016_06"),
                 Franz=c((min(Franz$distance_2015_01)),min(Franz$distance_2015_03),min(Franz$distance_2015_04), "NA", "NA", "NA"),
                 Sabine=c((min(Sabine$distance_2015_01)),min(Sabine$distance_2015_03),min(Sabine$distance_2015_04),"NA", "NA", "NA"),
@@ -369,13 +410,18 @@ Mind_dist_table <-data.frame(WSS=c("2015_01","2015_03","2015_04", "2016_01","201
                 Venus=c("NA", "NA", "NA", min(Venus$distance_2016_01) , min(Venus$distance_2016_05), min(Venus$distance_2016_06))
                 )
                 
-knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwienschrecks und den Wildschweinen")
+
 
 ```
+
+```{r Table_Mindist, echo=F, message=F, warning=F }
 knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwienschrecks und den Wildschweinen")
+```
 
 
-```{r Sabine und Wildschweinschreck 2015_04 (Standardeinstellung) werden näher betrachetet }
+Sabine und Olga werden entsprechend näher untersucht. Dazu werden erst einmal die Wege der Schweine sieben Tage vor ertönen des ersten Schrecks und sieben Tage nach Ertönen des ersten Schrecks abgebildet: 
+
+```{r Research Question 1, echo=F, results='hide', message=F, warning=F }
 # ich möchte Sabine nun genauer untersuchen
 
 Sabine <- Sabine %>%
@@ -387,8 +433,8 @@ Sabine <- Sabine %>%
 # es werden drei zweitpunkte festgelegt, um 2 Zeitintervalle zu untersuchen. dies sind der Zeitpunkt eine Woche vor dem Schreck, der Zeitpunkt am Datum_on des Schrecks, und der Zeitpunkt 1 Woche nach Einschalten des Schrecks. die Zeitspannend daziwschen sind zu untersuchen:
 schreck_agenda_2015_04 <- filter(schreck_agenda_relevant,id=="WSS_2015_04")
 t2_WSS_2015_04 <- min(schreck_agenda_2015_04$datum_on)
-t1_WSS_2015_04 <- t2_WSS_2015_04-days(7)
-t3_WSS_2015_04 <- t2_WSS_2015_04+days(7)
+t1_WSS_2015_04 <- t2_WSS_2015_04-days(2)
+t3_WSS_2015_04 <- t2_WSS_2015_04+days(2)
 
 Sabine_t1_t2_04 <- Sabine%>%
   filter(DatetimeUTC > t1_WSS_2015_04 & DatetimeUTC < t2_WSS_2015_04 )
@@ -460,9 +506,12 @@ ggplot() +
 # wiederum ist kein Einfluss zu erkennen. 
   
 ```
+Es zeigt sich bei allen Plot keinen Einfluss des Wildschweinschrecks auf das Wildschwein. Die Tiere gehen trotz Alarm teilweise sogar noch näher an den Schreck heran. Entsprechend muss der zweite Teil der Analyse, nämlich die Veränderung über die Zeit (z.B. durch Gewöhnung), nicht untersucht werden. Auch die weitere Untersuchung von Wildschweinen, die sich ebenfalls im potenziellen Einflussbereich der Wildschweinschrecks aufhalten, kann weggelassen werden. Diese hätte nur dann Sinn gemacht, wenn bei den anderen Schweinen ein sichtbarer Effekt aufgetreten wäre. 
 
+## Research Question 2
+to be done
 
-```{r Hintergrundmap einfügen, echo=T, results='hide', message=F, warning=F }
+```{r background map, echo=F, results='hide', message=F, warning=F }
 crop_fanel <- read_sf("Feldaufnahmen_Fanel.gpkg")
 
 head(crop_fanel)
