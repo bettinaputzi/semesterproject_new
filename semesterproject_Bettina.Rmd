@@ -1,13 +1,12 @@
 ---
 title: "Semseterprojekt Wildschweinschreck"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+author: "Bettina Putzi"
 ---
-
-ADD CHUNK by clicking ctrl+alt+I
-
-```{r}
-
-```
 
 
 ```{r libraries, echo=F, results='hide', message=F, warning=F}
@@ -27,6 +26,7 @@ library(forcats)
 library(plotly)
 library(tidyr) # to reshape tables
 library(tmap)     # Background maps
+library(cowplot) # plots nebeneinander aufzeigen
 ```
 
 
@@ -42,7 +42,7 @@ schreck_locations<-schreck_locations
 ```
 
 
-
+## Übersicht und Dataset-Reduktion
 ```{r Nils Code on sampling regime, include=F, eval=T}
 limits <- c(0,200)
 breaks = seq(0,200,50)
@@ -204,7 +204,7 @@ sampling_periods_relevant_convexhull <- wildschwein_sf_relevant %>%
 
 # Zuletzt wird nochmal der gleiche Plot wie anfangs erstellt, einfach nur noch mit den relevanten Wildschweinschrecks und den relevanten Wildschweinen.
 plot_boars_schreck_rel_spattemp<-ggplot()+
- geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar), alpha=0.1))+
+ geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar)),alpha=0.1)+
  geom_sf(data = schreck_agenda_relevant, aes(color=factor(id)))+
   coord_sf(datum = 2056)
 
@@ -224,7 +224,7 @@ Farbset
 
 # der Plot mit allen relevanten SChweinen und allen relevanten WSS wird nochmal geplottet
 plot_boars_schreck_rel_spattemp<-ggplot()+
- geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar), alpha=0.1))+
+ geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar)),alpha=0.5)+
  geom_sf(data = schreck_agenda_relevant)+ # man könnte auch Farben den Wildschweinschrecks zuordnern, mit dem Zusatz aes(color=factor(id)))
   coord_sf(datum = 2056)+
   scale_fill_manual(values=Farbset)+
@@ -271,14 +271,14 @@ ggplot()+
 ```
 
 Als Zwischenfazit nach der Explorativen Analyse konnte folgendes herausgefunden werden:
--	Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird voraussichtlich ausgeschlossen)
--	Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
--	Venus ist für die Analyse von «WSS_2016_01», «WSS_2016_05» und «WSS_2016_06» geeignet
--	Die initial grossen Datensätze mit vielen irrelevanten Schweinen und Wildschweinschrecks konnten stark reduziert werden. 
--	Die Zeitperioden der verbleibenden Wildschweine überlappen diejenigen der Wildschweinschrecks vor und nach der Testphase .
+    - Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird voraussichtlich ausgeschlossen)
+    -	Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
+    -	Venus ist für die Analyse von «WSS_2016_01», «WSS_2016_05» und «WSS_2016_06» geeignet
+    -	Die initial grossen Datensätze mit vielen irrelevanten Schweinen und Wildschweinschrecks konnten stark reduziert werden. 
+    -	Die Zeitperioden der verbleibenden Wildschweine überlappen diejenigen der Wildschweinschrecks vor und nach der Testphase .
 
 
-## Research Question 1 
+## Forschungsfrage 1 
 > Wie kann der Effekt-Range der Wildschwein-Schrecks von den räumlichen Laufbahnen der Wildschweine hergeleitet werden? 
 
 Eine Studie der ZHAW erklärt folgendes: "Die Wahrscheinlichkeit, dass der nächtliche Immissionsgrenzwert von 55 dB(A) durch die Geräusche des Wildschweinschrecks bei Einstellung der maximalen Lautstärke überschritten wird, liegt bei den Distanzen von 2m, 10m und 50m bei 100%. Bei 100m und 200m liegt diese Wahrscheinlichkeit immer noch bei über 90%, hingegen bei 500m nur noch bei 20%. Bei 1000m Distanz liegt die Wahrscheinlichkeit der Überschreitung der gesetzlichen Immissionsgrenzwerte bei 0% und ab 1500m sind keine Geräusche mehr messbar (Krähenmann 2015).» (Suter et al., 2018, 23f.). Entsprechend wird hier angenommen, dass mindestens bei 200 Meter doch noch einen Einfluss vermutbar wäre. 
@@ -319,84 +319,62 @@ schreck_agenda_relevant_short <- select(schreck_agenda_relevant, id, X, Y)
 WSS_2016_01<-subset(schreck_agenda_relevant_short, id=="WSS_2016_01")
 str(wildschwein_sf_relevant) # 84915 observations
 
-X_WSS_2016_01<-rep(WSS_2016_01$X, times=84915)
-Y_WSS_2016_01<-rep(WSS_2016_01$Y, times=84915)
 
 
 WSS_2016_05<-subset(schreck_agenda_relevant_short, id=="WSS_2016_05")
-str(wildschwein_sf_relevant) # 84915 observations
 
-X_WSS_2016_05<-rep(WSS_2016_05$X, times=84915)
-Y_WSS_2016_05<-rep(WSS_2016_05$Y, times=84915)
 
 WSS_2016_06<-subset(schreck_agenda_relevant_short, id=="WSS_2016_06")
-str(wildschwein_sf_relevant) # 84915 observations
 
-X_WSS_2016_06<-rep(WSS_2016_06$X, times=84915)
-Y_WSS_2016_06<-rep(WSS_2016_06$Y, times=84915)
 
 WSS_2015_01<-subset(schreck_agenda_relevant_short, id=="WSS_2015_01")
 WSS_2015_01<-unique(WSS_2015_01)
 str(wildschwein_sf_relevant) # 84915 observations
 
-X_WSS_2015_01<-rep(WSS_2015_01$X, times=84915) 
-Y_WSS_2015_01<-rep(WSS_2015_01$Y, times=84915)
-
 WSS_2015_03<-subset(schreck_agenda_relevant_short, id=="WSS_2015_03")
 WSS_2015_03<-unique(WSS_2015_03)
-str(wildschwein_sf_relevant) # 84915 observations
-
-X_WSS_2015_03<-rep(WSS_2015_03$X, times=84915)
-Y_WSS_2015_03<-rep(WSS_2015_03$Y, times=84915)
 
 WSS_2015_04<-subset(schreck_agenda_relevant_short, id=="WSS_2015_04")
 WSS_2015_04<-unique(WSS_2015_04)
-str(wildschwein_sf_relevant) # 84915 observations
 
-X_WSS_2015_04<-rep(WSS_2015_04$X, times=84915)
-Y_WSS_2015_04<-rep(WSS_2015_04$Y, times=84915)
-
-
-Distance_DS<-cbind(wildschwein_sf_relevant,X_WSS_2016_01,Y_WSS_2016_01, X_WSS_2016_05, Y_WSS_2016_05, X_WSS_2016_06, Y_WSS_2016_06, X_WSS_2015_01, Y_WSS_2015_01,X_WSS_2015_03, Y_WSS_2015_03, X_WSS_2015_04, Y_WSS_2015_04)
-
-# Die Euklidischen Distanzen zum Schreck werden berechnet um herauszufienden, ob die Schweine potenziell vom Wildschwein beeinflusst werden könnten
+# Die Euklidischen Distanzen zum Schreck werden berechnet um herauszufinden, ob die Schweine potenziell vom Wildschweinschreck beeinflusst werden könnten
 # zuerst für Venus
 
-Venus <- Distance_DS%>%
+Venus <- wildschwein_sf_relevant%>%
   subset(TierName=="Venus")%>%
-  mutate(distance_2016_01 = sqrt((X-X_WSS_2016_01)^2+(Y-Y_WSS_2016_01)^2))%>%
-  mutate(distance_2016_05 = sqrt((X-X_WSS_2016_05)^2+(Y-Y_WSS_2016_05)^2))%>%
-  mutate(distance_2016_06 = sqrt((X-X_WSS_2016_06)^2+(Y-Y_WSS_2016_06)^2))
+  mutate(distance_2016_01 = sqrt((X-as.numeric(WSS_2016_01$X))^2+(Y-as.numeric(WSS_2016_01$Y))^2))%>%
+  mutate(distance_2016_05 = sqrt((X-as.numeric(WSS_2016_05$X))^2+(Y-as.numeric(WSS_2016_05$Y))^2))%>%
+  mutate(distance_2016_06 = sqrt((X-as.numeric(WSS_2016_06$X))^2+(Y-as.numeric(WSS_2016_06$Y))^2))
 min(Venus$distance_2016_01) ## die Minimaldistanz ist 2781 Meter, das heisst, dass Venus wohl nicht von diesem Schreck beeinflusst wird.
 min(Venus$distance_2016_05) ## die Minimaldistanz ist 4612 Meter, das heisst, dass Venus wohl nicht von diesem Schreck beeinflusst wird.
 min(Venus$distance_2016_06) ## die Minimaldistanz ist 448 Meter, das heisst, dass Venus wohl kaum von diesem Schreck beeinflusst wird.
 
 # Sabine
-Sabine <- Distance_DS%>%
+Sabine <- wildschwein_sf_relevant%>%
   subset(TierName=="Sabine")%>%
-  mutate(distance_2015_01 = sqrt((X-X_WSS_2015_01)^2+(Y-Y_WSS_2015_01)^2))%>%
-  mutate(distance_2015_03 = sqrt((X-X_WSS_2015_03)^2+(Y-Y_WSS_2015_03)^2))%>%
-  mutate(distance_2015_04 = sqrt((X-X_WSS_2015_04)^2+(Y-Y_WSS_2015_04)^2))
+  mutate(distance_2015_01 = sqrt((X-as.numeric(WSS_2015_01$X))^2+(Y-as.numeric(WSS_2015_01$Y))^2))%>%
+  mutate(distance_2015_03 = sqrt((X-as.numeric(WSS_2015_03$X))^2+(Y-as.numeric(WSS_2015_03$Y))^2))%>%
+  mutate(distance_2015_04 = sqrt((X-as.numeric(WSS_2015_04$X))^2+(Y-as.numeric(WSS_2015_04$Y))^2))
 min(Sabine$distance_2015_01) ## die Minimaldistanz ist 10 Meter, das heisst, dass Sabine von diesem Schreck beeinflusst werden könnte.
 min(Sabine$distance_2015_03) ## die Minimaldistanz ist 25 Meter, das heisst, dass Sabine von diesem Schreck beeinflusst werden könnte.
 min(Sabine$distance_2015_04) ## die Minimaldistanz ist 42 Meter, das heisst, dass Sabine von diesem Schreck beeinflusst werden könnte.
 
 # Olga
-Olga <- Distance_DS%>%
+Olga <- wildschwein_sf_relevant%>%
   subset(TierName=="Olga")%>%
-  mutate(distance_2015_01 = sqrt((X-X_WSS_2015_01)^2+(Y-Y_WSS_2015_01)^2))%>%
-  mutate(distance_2015_03 = sqrt((X-X_WSS_2015_03)^2+(Y-Y_WSS_2015_03)^2))%>%
-  mutate(distance_2015_04 = sqrt((X-X_WSS_2015_04)^2+(Y-Y_WSS_2015_04)^2))
+  mutate(distance_2015_01 = sqrt((X-as.numeric(WSS_2015_01$X))^2+(Y-as.numeric(WSS_2015_01$Y))^2))%>%
+  mutate(distance_2015_03 = sqrt((X-as.numeric(WSS_2015_03$X))^2+(Y-as.numeric(WSS_2015_03$Y))^2))%>%
+  mutate(distance_2015_04 = sqrt((X-as.numeric(WSS_2015_04$X))^2+(Y-as.numeric(WSS_2015_04$Y))^2))
 min(Olga$distance_2015_01) ## die Minimaldistanz ist 8 Meter, das heisst, dass Olga von diesem Schreck beeinflusst werden könnte.
 min(Olga$distance_2015_03) ## die Minimaldistanz ist 704 Meter, das heisst, dass Olga wohl nicht von diesem Schreck beeinflusst wird.
 min(Olga$distance_2015_04) ## die Minimaldistanz ist 401 Meter, das heisst, dass Olga wohl kaum von diesem Schreck beeinflusst wird.
 
 # Franz
-Franz <- Distance_DS%>%
+Franz <- wildschwein_sf_relevant%>%
   subset(TierName=="Franz")%>%
-  mutate(distance_2015_01 = sqrt((X-X_WSS_2015_01)^2+(Y-Y_WSS_2015_01)^2))%>%
-  mutate(distance_2015_03 = sqrt((X-X_WSS_2015_03)^2+(Y-Y_WSS_2015_03)^2))%>%
-  mutate(distance_2015_04 = sqrt((X-X_WSS_2015_04)^2+(Y-Y_WSS_2015_04)^2))
+  mutate(distance_2015_01 = sqrt((X-as.numeric(WSS_2015_01$X))^2+(Y-as.numeric(WSS_2015_01$Y))^2))%>%
+  mutate(distance_2015_03 = sqrt((X-as.numeric(WSS_2015_03$X))^2+(Y-as.numeric(WSS_2015_03$Y))^2))%>%
+  mutate(distance_2015_04 = sqrt((X-as.numeric(WSS_2015_04$X))^2+(Y-as.numeric(WSS_2015_04$Y))^2))
 min(Franz$distance_2015_01) ## die Minimaldistanz ist 8 Meter, das heisst, dass Franz von diesem Schreck beeinflusst werden könnte.
 min(Franz$distance_2015_03) ## die Minimaldistanz ist 704 Meter, das heisst, dass Franz wohl nicht von diesem Schreck beeinflusst
 min(Franz$distance_2015_04) ## die Minimaldistanz ist 401 Meter, das heisst, dass Franz wohl kaum von diesem Schreck beeinflusst wird.
@@ -419,7 +397,7 @@ knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwiens
 ```
 
 
-Sabine und Olga werden entsprechend näher untersucht. Dazu werden erst einmal die Wege der Schweine sieben Tage vor ertönen des ersten Schrecks und sieben Tage nach Ertönen des ersten Schrecks abgebildet: 
+Sabine und Olga werden entsprechend näher untersucht. Dazu werden erst einmal die Wege der Schweine zwei Tage vor ertönen des ersten Schrecks und zwei Tage nach Ertönen des ersten Schrecks abgebildet: 
 
 ```{r Research Question 1, echo=F, results='hide', message=F, warning=F }
 # ich möchte Sabine nun genauer untersuchen
@@ -430,86 +408,154 @@ Sabine <- Sabine %>%
          speed = steplength/timelag) # in meters per second
 
 
-# es werden drei zweitpunkte festgelegt, um 2 Zeitintervalle zu untersuchen. dies sind der Zeitpunkt eine Woche vor dem Schreck, der Zeitpunkt am Datum_on des Schrecks, und der Zeitpunkt 1 Woche nach Einschalten des Schrecks. die Zeitspannend daziwschen sind zu untersuchen:
+# es werden drei Zeitpunkte festgelegt, um 2 Zeitintervalle zu untersuchen. dies sind der Zeitpunkt eine Woche vor dem Schreck, der Zeitpunkt am Datum_on des Schrecks, und der Zeitpunkt 1 Woche nach Einschalten des Schrecks. die Zeitspannen daziwschen sind zu untersuchen:
 schreck_agenda_2015_04 <- filter(schreck_agenda_relevant,id=="WSS_2015_04")
 t2_WSS_2015_04 <- min(schreck_agenda_2015_04$datum_on)
-t1_WSS_2015_04 <- t2_WSS_2015_04-days(2)
-t3_WSS_2015_04 <- t2_WSS_2015_04+days(2)
+t2_WSS_2015_04 <- t2_WSS_2015_04-minutes(150) # ich nehme an, dass es um 21:30 dämmert
+t1_WSS_2015_04_5h <- t2_WSS_2015_04-hours(5)
+t3_WSS_2015_04_5h <- t2_WSS_2015_04+hours(5)
+t1_WSS_2015_04_2d <- t2_WSS_2015_04-days(2)
+t3_WSS_2015_04_2d <- t2_WSS_2015_04+days(2)
 
-Sabine_t1_t2_04 <- Sabine%>%
-  filter(DatetimeUTC > t1_WSS_2015_04 & DatetimeUTC < t2_WSS_2015_04 )
+Sabine_t1_t2_04_5h <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_04_5h & DatetimeUTC <= t2_WSS_2015_04 )
+Sabine_t1_t2_04_2d <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_04_2d & DatetimeUTC <= t2_WSS_2015_04 )
 
-Sabine_t2_t3_04 <- Sabine%>%
-  filter(DatetimeUTC > t2_WSS_2015_04 & DatetimeUTC < t3_WSS_2015_04 )
+Sabine_t2_t3_04_5h <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_04 & DatetimeUTC < t3_WSS_2015_04_5h )
+Sabine_t2_t3_04_2d <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_04 & DatetimeUTC < t3_WSS_2015_04_2d )
 
-ggplot() +
-  geom_path(data = Sabine_t1_t2_04, aes(X,Y, color="before")) +
-  geom_point(data = schreck_agenda_2015_04, aes(X,Y, color="Schreck")) +
-  geom_path(data = Sabine_t2_t3_04, aes(X,Y, color="after")) +
-  labs(color="Trajectory", title = "Der Vergleich von Sabine vor und nach dem Schreck")  +
-  theme_minimal()
+plot_5h<- ggplot() +
+  geom_path(data = Sabine_t1_t2_04_5h, aes(X,Y, color="5h before")) +
+  geom_point(data = schreck_agenda_2015_04, aes(X,Y),color="blue",shape="triangle", size=4) +
+  geom_path(data = Sabine_t2_t3_04_5h, aes(X,Y, color="5h after")) +
+  #labs(color="Trajectory", title = "Der Vergleich von Sabine 5h vor und 5h nach dem ersten Ertönen des Schrecks")  +
+  theme_minimal()+
+  theme(legend.position="bottom")
+
+plot_2d<-ggplot() +
+  geom_path(data = Sabine_t1_t2_04_2d, aes(X,Y, color="2 days before")) +
+  geom_path(data = Sabine_t2_t3_04_2d, aes(X,Y, color="2 days after")) +
+  geom_point(data = schreck_agenda_2015_04, aes(X,Y),color="blue",shape="triangle", size=4) +
+  #labs(color="Trajectory", title = "Der Vergleich von Sabine zwei Tage vor und zwei Tage nach dem ersten Ertönen des Schrecks")  +
+  theme_minimal()+
+   theme(legend.position="bottom")
+
+
+plot_grid(plot_5h, plot_2d, labels="AUTO")
+
+
 # Der Wildschweinschreck scheint gar keinen Einfluss auf das Verhalten von Sabine zu haben. Vielleicht ein anderer Wildschweinschreck?
 
 
 # dasselbe Vorgehen einfach mit einem anderen Schreck: 
 schreck_agenda_2015_01 <- filter(schreck_agenda_relevant,id=="WSS_2015_01")
 t2_WSS_2015_01 <- min(schreck_agenda_2015_01$datum_on)
-t1_WSS_2015_01 <- t2_WSS_2015_01-days(2)
-t3_WSS_2015_01 <- t2_WSS_2015_01+days(2)
+t2_WSS_2015_01 <- t2_WSS_2015_01-minutes(150)
+t2_WSS_2015_01
+t1_WSS_2015_01_5h <- t2_WSS_2015_01-hours(5)
+t3_WSS_2015_01_5h <- t2_WSS_2015_01+hours(5)
+t1_WSS_2015_01_2d <- t2_WSS_2015_01-days(2)
+t3_WSS_2015_01_2d <- t2_WSS_2015_01+days(2)
 
-Sabine_t1_t2_01 <- Sabine%>%
-  filter(DatetimeUTC > t1_WSS_2015_01 & DatetimeUTC < t2_WSS_2015_01 )
+Sabine_t1_t2_01_5h <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_5h & DatetimeUTC <= t2_WSS_2015_01 )
+Sabine_t1_t2_01_2d <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_2d & DatetimeUTC <= t2_WSS_2015_01 )
 
-Sabine_t2_t3_01 <- Sabine%>%
-  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01 )
+Sabine_t2_t3_01_5h <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_5h )
+Sabine_t2_t3_01_2d <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_2d )
 
-ggplot() +
-  geom_path(data = Sabine_t1_t2_01, aes(X,Y, color="before")) +
-  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
-  geom_path(data = Sabine_t2_t3_01, aes(X,Y, color="after")) +
-  labs(color="Trajectory", title = "Der Vergleich von Sabine vor und nach dem Schreck")  +
-  theme_minimal()
+
+plot_5h_01<- ggplot() +
+  geom_path(data = Sabine_t1_t2_01_5h, aes(X,Y, color="5h before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
+  geom_path(data = Sabine_t2_t3_01_5h, aes(X,Y, color="5h after")) +
+  #labs(color="Trajectory", title = "Der Vergleich von Sabine 5h vor und 5h nach dem ersten Ertönen des Schrecks")  +
+  theme_minimal()+
+  theme(legend.position="bottom")
+
+plot_2d_01<-ggplot() +
+  geom_path(data = Sabine_t1_t2_01_2d, aes(X,Y, color="2 days before")) +
+  geom_path(data = Sabine_t2_t3_01_2d, aes(X,Y, color="2 days after")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
+  #labs(color="Trajectory", title = "Der Vergleich von Sabine zwei Tage vor und zwei Tage nach dem ersten Ertönen des Schrecks")  +
+  theme_minimal()+
+   theme(legend.position="bottom")
+
+plot_grid(plot_5h_01, plot_2d_01, labels="AUTO")
 # auch hier scheint der Schreck keinen Einfluss nehmen zu können.
 
 
 # deshalb wird zum schluss noch  Olga untersucht
-Olga_t1_t2_01 <- Olga%>%
-  filter(DatetimeUTC > t1_WSS_2015_01 & DatetimeUTC < t2_WSS_2015_01)
+Olga_t1_t2_01_2d <- Olga%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_2d & DatetimeUTC < t2_WSS_2015_01)
+Olga_t1_t2_01_5h <- Olga%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_5h & DatetimeUTC < t2_WSS_2015_01)
 
-Olga_t2_t3_01 <- Olga%>%
-  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01 )
+Olga_t2_t3_01_2d <- Olga%>%
+  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_2d )
+Olga_t2_t3_01_5h <- Olga%>%
+  filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_5h )
 
-
-ggplot() +
-  geom_path(data = Olga_t1_t2_01, aes(X,Y, color="before")) +
-  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
-  geom_path(data = Olga_t2_t3_01, aes(X,Y, color="after")) +
+plot_5h_01_olg<-ggplot() +
+  geom_path(data = Olga_t1_t2_01_5h, aes(X,Y, color="5h before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
+  geom_path(data = Olga_t2_t3_01_5h, aes(X,Y, color="5h after")) +
   labs(color="Trajectory", title = "Der Vergleich von Olga vor und nach dem Schreck") +
   theme_minimal()
   
   
-# auch hier ist kein Einfluss des Wildschweinschrecks auf das Wildschwein zu erkennen. Um nochmal genauer hinzuschauen, werden nur noch die Trajectories bei Nacht untersucht. dies hilft den genauen Zeitp
+# auch hier ist kein Einfluss des Wildschweinschrecks auf das Wildschwein zu erkennen. Um nochmal genauer hinzuschauen, werden nur noch die Trajectories bei Nacht untersucht. dies hilft den genauen Zeitpunkt zu bestimmen, da der Wildschweinschreck bei der dämmerung losgeht
 
-Olga_t1_t2_01_nacht <- Olga_t1_t2_01 %>%
+Olga_t1_t2_01_5h_nacht <- Olga_t1_t2_01_5h %>%
+  filter(day != "Tag")
+Olga_t1_t2_01_2d_nacht <- Olga_t1_t2_01_2d %>%
   filter(day != "Tag")
   
-Olga_t2_t3_01_nacht <- Olga_t2_t3_01 %>%
+  
+Olga_t2_t3_01_5h_nacht <- Olga_t2_t3_01_5h %>%
+  filter(day != "Tag") 
+Olga_t2_t3_01_2d_nacht <- Olga_t2_t3_01_2d %>%
   filter(day != "Tag") 
 
-ggplot() +
-  geom_path(data = Olga_t1_t2_01_nacht, aes(X,Y, color="before")) +
-  geom_point(data = schreck_agenda_2015_01, aes(X,Y, color="Schreck")) +
-  geom_path(data = Olga_t2_t3_01_nacht, aes(X,Y, color="after")) +
-  labs(color="Trajectory", title = "Der Vergleich von Olga vor und nach dem Schreck - nur bei Nacht") +
-  theme_minimal()
+plot_olga_night_5h<-ggplot() +
+  geom_path(data = Olga_t1_t2_01_5h_nacht, aes(X,Y, color="5h before (here no day trips included)")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
+  geom_path(data = Olga_t2_t3_01_5h_nacht, aes(X,Y, color="5 h after")) +
+  labs(color="Trajectory") +
+  theme_minimal()+
+  ylim(1204400,1205620)+
+  theme(legend.position="bottom")
+
+plot_olga_night_2d<-ggplot() +
+  geom_path(data = Olga_t1_t2_01_2d_nacht, aes(X,Y, color="2 days before")) +
+  geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
+  geom_path(data = Olga_t2_t3_01_2d_nacht, aes(X,Y, color="2 days after")) +
+  labs(color="Trajectory") +
+  theme_minimal()+
+  ylim(1204400,1205620)+
+  theme(legend.position="bottom")
+
+plot_grid(plot_olga_night_5h, plot_olga_night_2d, labels="AUTO")
+
 
 # wiederum ist kein Einfluss zu erkennen. 
   
 ```
 Es zeigt sich bei allen Plot keinen Einfluss des Wildschweinschrecks auf das Wildschwein. Die Tiere gehen trotz Alarm teilweise sogar noch näher an den Schreck heran. Entsprechend muss der zweite Teil der Analyse, nämlich die Veränderung über die Zeit (z.B. durch Gewöhnung), nicht untersucht werden. Auch die weitere Untersuchung von Wildschweinen, die sich ebenfalls im potenziellen Einflussbereich der Wildschweinschrecks aufhalten, kann weggelassen werden. Diese hätte nur dann Sinn gemacht, wenn bei den anderen Schweinen ein sichtbarer Effekt aufgetreten wäre. 
 
-## Research Question 2
-to be done
+
+## Forschungsfrage 2
+> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor, während und nach der Testphase mit dem Schreck? 
+
+In der Forschungsfrage 1 konnte kein Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert. Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für eins der Schweine die Aufenthaltsorte bestimmt werden. 
+
+Als erstes werden die Aufenthaltsorte der Schweine nochmals geplottet, diesmal inkl. Informationen zu der Umgebung. 
 
 ```{r background map, echo=F, results='hide', message=F, warning=F }
 crop_fanel <- read_sf("Feldaufnahmen_Fanel.gpkg")
@@ -540,16 +586,201 @@ tm_shape(pk100_BE) +
   tm_shape(sampling_periods_relevant_convexhull)+
   tm_polygons(col="tiercollar", alpha=0.5, boarder.col="black", fill=Farbset)+
   tm_layout(legend.outside = TRUE)
+```
 
+Jetzt werden für die Aufenthaltsorte der Wildschweine mit den Umgebungsdaten verknüpft. Danach wird berechnet, zu welchem Anteil sich Sabine in welcher Umgebung aufhält. Dies wird für 2 Tage vor und zwei Tage nach dem ersten Schrecksignal untersucht. 
+```{r}
+wildschwein_1stO_2d_before <-  st_join(Sabine_t1_t2_01_2d, crop_fanel)
+wildschwein_1stO_2d_after <- st_join(Sabine_t2_t3_01_2d, crop_fanel)
+
+Sabine_smry_before <- wildschwein_1stO_2d_before %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+Sabine_smry_after <- wildschwein_1stO_2d_after %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+p_1stO_1_before <- ggplot(Sabine_smry_before, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+  labs(title = "Percentages of samples in a given crop per hour",subtitle = "Only showing the most common categories")
+p_1stO_1_before
+
+p_1stO_1_after <- ggplot(Sabine_smry_after, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+  labs(title = "Percentages of samples in a given crop per hour",subtitle = "Only showing the most common categories")
+p_1stO_1_after
+
+```
+Für Sabine hat sich gezeigt, dass Sie sich sowieso im Wald aufgehalten hat und nicht auf die Felder ging. Entsprechend hat sie sich dort wohl nicht bedroht gefühlt. Es lässt sich nicht sagen, ob sie ohne den Wildschweinschreck auf das Feld gegangen wäre.
+
+Um einen Vergleich anstellen zu können, wird Olga im selben Masse untersucht:
+```{r}
+Olga_1stO_2d_before <-  st_join(Olga_t1_t2_01_2d, crop_fanel)
+Olga_1stO_2d_after <- st_join(Olga_t2_t3_01_2d, crop_fanel)
+
+Olga_smry_before <- Olga_1stO_2d_before %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+Olga_smry_after <- Olga_1stO_2d_after %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+p_1stO_1_before_Olga <- ggplot(Olga_smry_before, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")
+p_1stO_1_before_Olga
+
+p_1stO_1_after_Olga <- ggplot(Olga_smry_after, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")+
+
+
+p_1stO_1_after_Olga
+
+plot_grid(p_1stO_1_before_Olga, p_1stO_1_after_Olga, labels="AUTO")
+```
+Olga hat sich vor dem ersten Schrecksignal auch mal in den Bohnen, der Wiese oder der Weide aufgehalten. Nachdem der Wildschweinschreck in Betrieb genommen wurde, hat sie das noch immer gemacht. Es kann nicht mit sicherheit gesagt werden, ob sie ihr Verhalten aufgrund des Schrecks geändert hätte.
+
+```{r}
+t1_WSS_2015_01_7d <- t2_WSS_2015_01-days(7)
+t3_WSS_2015_01_7d <- t2_WSS_2015_01+days(7)
+
+Sabi_Olga_t1_t2_01_7d <- wildschwein_sf_relevant%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_7d & DatetimeUTC <= t2_WSS_2015_01 )%>%
+  filter(tiercollar=="36 Olga 13976" | tiercollar== "2 Sabine 12275")
+Sabi_Olga_t1_t2_01_7d
+
+Sabi_Olga_t2_t3_01_7d <- wildschwein_sf_relevant%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_7d )%>%
+  filter(tiercollar=="36 Olga 13976" | tiercollar== "2 Sabine 12275")
+
+Sabi_Olga_1stO_2d_before <-  st_join(Sabi_Olga_t1_t2_01_7d, crop_fanel)
+Sabi_Olga_1stO_2d_after <- st_join(Sabine_Olga_t2_t3_01_7d, crop_fanel)
+
+Sabi_Olga_smry_before <- Sabi_Olga_1stO_2d_before %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+p_1stO_1_before_Sabi_Olga <- ggplot(Sabi_Olga_smry_before, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")
+p_1stO_1_before_Sabi_Olga
+
+
+
+Sabi_Olga_smry_after <- Sabi_Olga_1stO_2d_after %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+p_1stO_1_after_Sabi_Olga <- ggplot(Sabi_Olga_smry_after, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")
+p_1stO_1_after_Sabi_Olga
 
 ```
 
 
-
-## R Markdown tipps and tricks
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
