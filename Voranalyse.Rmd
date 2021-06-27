@@ -1,0 +1,286 @@
+---
+title: "Voranalyse und Datesatzreduktion"
+author: "Bettina Putzi"
+output: html_document
+---
+
+
+```{r libraries, echo=F, results='hide', message=F, warning=F}
+
+library(readr)        # to import tabular data (e.g. csv)
+library(dplyr)        # to manipulate (tabular) data
+library(ggplot2)      # to visualize data
+library(sf)           # to handle spatial vector data
+library(terra)        # To handle raster data
+library(lubridate)    # To handle dates and times
+library(zoo)
+#install.packages("devtools")
+library(devtools)
+library(ComputationalMovementAnalysisData)
+
+library(forcats)
+library(plotly)
+library(tidyr) # to reshape tables
+library(tmap)     # Background maps
+library(cowplot) # plots nebeneinander aufzeigen
+```
+
+
+
+```{r Daten einlesen, echo=F, results='hide', message=F, warning=F}
+#devtools::install_github("ComputationalMovementAnalysis/ComputationalMovementAnalysisData")
+head(wildschwein_BE)
+wildschwein_BE<-wildschwein_BE
+wildschwein_metadata<-wildschwein_metadata
+wildschwein_overlap_temp<-wildschwein_overlap_temp
+schreck_agenda<-schreck_agenda
+schreck_locations<-schreck_locations
+```
+
+
+## Übersicht und Dataset-Reduktion
+Zuerst wird eine explorative Datenanalyse durchgeführt, um zu entscheiden, welche Tiere und welche Wildschweinschrecks für die Analysen einbezogen werden sollten. Es sollten Tiere sein, die sich **während der Laufzeit** der Wildschweinschrecks in deren Nähe befanden. Dabei sollten im Datensatz **Positionsdaten der Wildschweine vor, während und nach der Laufzeit** der Wildschweinschrecks vorhanden sein. Einige Eckpunkte daraus werden nachfolgend kurz beschrieben:
+
+
+```{r Nils Code on sampling regime, include=F, eval=T}
+limits <- c(0,200)
+breaks = seq(0,200,50)
+labels = paste(c(rep("",length(breaks)-1),">"), breaks)
+
+wildschwein_BE<-wildschwein_BE %>%
+  mutate(TierName = fct_reorder(TierName, DatetimeUTC,min, .desc = TRUE)) %>%
+  group_by(TierID, TierName, CollarID) %>%
+  mutate(
+    timelag = as.numeric(difftime(lead(DatetimeUTC),DatetimeUTC, units = "mins")),
+    )
+
+
+```
+
+#### 1. Übersicht der getrackten 19 Wildschweine im Originaldatensatz für die Definition des maximal zu untersuchenden Zeitintervalls
+Minimum-Datum: 2014-05-28, Maximum-Datum: 2016-10-18
+```{r Plot_sampling_regime, echo=F, results='hide', message=F, warning=F}
+ggplot(wildschwein_BE,aes(DatetimeUTC, TierName, colour = timelag)) +
+  geom_line(lwd = 10) +
+  scale_color_gradientn(name = "Sampling interval", colours = RColorBrewer::brewer.pal(11, "Spectral"), limits = limits, na.value = NA, oob = scales::squish, breaks = seq(0,200,50), labels = labels) +
+  theme_minimal() +
+  theme(legend.position = "top") +
+  guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barwidth = unit(20, "lines"), barheight = unit(.5, "lines")))
+```
+
+
+#### 2. Geografische Zusammenhänge zwischen den Wildschweinen und den Wildschweinschrecks:
+Visualisierung der Aufenthaltsgebiete mit allen vorhandenen Positionspunkte pro Individuum, um die maximale räumliche Ausdehnung darstellen zu können.Die Convex-Hulls stellen das Einflussgebiet der verschiedenen Wildschweine dar, die Punkte die Wildschweinschrecks.
+```{r spatial_overlaps, echo=F, results='hide', message=F, warning=F}
+# Ortsbezogne Wildschweindaten werden  CRS 2056 zugewiesen
+wildschwein_sf <- wildschwein_BE %>%
+  st_as_sf(coords = c("E", "N"), crs = 2056) %>%
+  mutate(tiercollar = paste(TierID, TierName, CollarID))
+wildschwein_sf
+
+# Die ortsbezogenen Wilschweinschreck-Daten werden dem CRS 4326 zugewiesen und zu 2056 umgewandelt
+WSS_sf <- schreck_locations%>%
+  st_as_sf(coords = c("lon","lat"), crs=4326, remove = FALSE) 
+
+WSS_sf <- st_transform(WSS_sf, 2056)
+WSS_sf
+str(WSS_sf)
+
+# wir möchten die Koordinaten in Einzelspalten. Mit folgendem Code erhalten wir x und y (für lat und lon)
+WSS_sf <- WSS_sf %>%
+  cbind(., st_coordinates(WSS_sf))
+
+
+# Ein Convex-Hull wird erstellt und geplottet, um die Verteilung der Wildschweine aufzuzeigen
+wildschwein_convex_hull <- wildschwein_sf %>%
+  group_by(TierID, TierName, CollarID) %>%
+  summarise() %>%
+  st_convex_hull()
+
+# wildschwein_convex_hull %>%
+#   mutate(tiercollar = paste(TierID, TierName, CollarID))%>%
+#   ggplot(aes(fill = factor(TierID))) + geom_sf(alpha = 0.1) +
+#   coord_sf(datum = 2056) +
+#   facet_wrap(~tiercollar) +
+#   theme(legend.position = "none")
+
+wildschwein_convex_hull %>%
+  mutate(tiercollar = paste(TierID, TierName, CollarID))
+
+# Zusätzlich wird der Zusammenhang der Wildschweine und der Wildschweinschrecks aufgezeigt
+plot_boars_schreck<-ggplot()+
+ geom_sf(data = wildschwein_convex_hull, aes(fill = factor(TierID), alpha=0.1))+
+ geom_sf(data = WSS_sf, aes(color=factor(id)))+
+  coord_sf(datum = 2056)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+plot_boars_schreck
+```
+
+
+Wildschweinschrecks herausfiltern, die nicht in den Convex-Hulls der Wildschweine sind, d.h. in deren Nähe sich die Wildschweine nicht aufgehalten haben --> explorativ gemäss dem Plot, indem die Koordinaten eingegrenzt werden (X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000). 
+**Feststellung**: Viele Schrecks liegen ausserhalb des Aufenthaltsgebietes der Wildschweine.
+```{r relevant_spatial_overlaps, echo=F, results='hide', message=F, warning=F}
+# jetzt können alle Wildschweinschrecks rausgefiltert werden, die nicht in den convex hulls sind. Viele der Wildschweinschrecks sind ausserhalb des Aufenthaltsgebiets von Wildschweinen. Wir machen das explorativ, d.h. wir grenzen die Koordinaten gemäss dem Plot ein.
+WSS_sf_relevant <- WSS_sf%>%
+  filter(X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000) # Alle Wildschwienschrecks im näheren Umkreis der Wildschwein-Aufethaltsgebiete sind in WSS_sf_relevant gespiechert
+	
+# hier nochmal der Plot, nur noch mit den relevanten Wildschweinschrecks
+plot_boars_schreck_rel<-ggplot()+
+ geom_sf(data = wildschwein_convex_hull, aes(fill = factor(TierID)), alpha=0.5)+
+ geom_sf(data = WSS_sf_relevant, aes(color=factor(id)))+
+  coord_sf(datum = 2056)+ 
+  theme_minimal()+
+  theme(legend.position = "none")
+  
+
+plot_boars_schreck_rel
+```
+
+
+####	3. Zeitlich und geografisch relevante Wildschweinschrecks in Abhängigkeit von den Wildschweindaten
+Alle Daten der Schrecks löschen, die sich nicht mit den zeitlichen Wildschweindaten überschneiden, bzw. die vor und nach dem Tracking der Wildschweine laufen (Aus Task 1)
+```{r  spatio-temporal-relevant-schrecks, echo=F, results='hide', message=F, warning=F}
+
+# alle Daten die sich nicht mit den Wilschweinen überschneiden löschen
+summary(wildschwein_BE$DatetimeUTC)
+schreck_agenda_relevant <- schreck_agenda%>%
+  filter(datum_on > "2014-05-28" & datum_on < "2016-10-18") # somit sind alle Schrecks rausgefiltert, die vor der Messung der Wildschweine schon einen Alarmton von sich geben und alle Schrecks die nach der Periode der Wildschweinmessung noch einen Ton von sich geben. Denn basierend darauf können wir keine Analysen machen. 
+
+# alle Wildschweinschrecks die ausserhalb des Wildschweingebiets sind und die nicht der richtigen Zeitperiode entsprechen, wurden gelöscht.Es entsteht der finale Datensatz für die Wildschweinschrecks, mit dem wir arbeiten wollen (schreck_agenda_relevant)
+# MIT DIESEM DATENSATZ ARBEITEN WIR FÜR DIE WILDSCHWEINSCHRECKANALYSE
+schreck_agenda_relevant <- left_join(WSS_sf_relevant,schreck_agenda_relevant,by="id")
+schreck_agenda_relevant <- schreck_agenda_relevant %>%
+  na.omit(datum_on)
+
+schreck_agenda_relevant$modus<-as.factor(schreck_agenda_relevant$modus)
+
+ggplot(schreck_agenda_relevant, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
+         geom_errorbarh(aes(color = modus))+
+  theme_minimal()
+
+# udn ein kurzer Blick in alle Schreck-Daten:
+# ggplot(schreck_agenda, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
+#          geom_errorbarh(aes(color = modus))
+```
+
+
+#### 4. Wildschweine, deren Zeitintervalle sich mit denjenigen der relevanten Wildschweinschrecks überlappen
+Wildschweine herausfiltern mit Trackingdaten vor, im Verlauf und nach der Schreck-Laufdauer.
+```{r welche wildschweine werden zeitgleich mit dem Wildschweinschreck-Alarm gemessen, echo=F, results='hide', message=F, warning=F}
+
+# Nachfolgend werden die Samplingperioden mit den Werten mix und max pro Tier und Halsband identifiziert
+sampling_periods <- wildschwein_BE %>%
+  group_by(TierID, TierName, CollarID) %>%
+  summarise(
+    min = min(DatetimeUTC),
+    max = max(DatetimeUTC)
+  )
+
+# es muss ein Intervall gebildet werden, damit nachfolgend herausgefunden werden kann, ob die Wildschweinschrecks innerhalb einer Wildschwein-Messperiode eingestellt waren (d.h. Ein- UND Ausschaltung während der Messperiode der Schweine stattfindet (idealfall). Würde dieser Idealfall nicht eintreten, könne man evtl. auch andere mögliche Schweine bestimmen.  
+intervall_wildschwein <- sampling_periods$min %--% sampling_periods$max #1) Intervallbildung
+
+sampling_periods$WSS_on_within_WS_intervalls<-schreck_agenda_relevant$datum_on %within% intervall_wildschwein #ist die Einschaltung innterhalb der Messperiode der Wildschweine?
+sampling_periods$WSS_off_within_WS_intervalls<-schreck_agenda_relevant$datum_off %within% intervall_wildschwein # ist die Ausschaltung innterhalb der Messperiode der Wildschweine?
+
+# Jetzt werden alle Schweine herausgefiltert, die vor der Einschaltung, während der Messperiode und nach der Ausschaltung der noch in Frage kommenden Wildschweinschrecks gemessen werden. d.h. alle die die Ein- und Ausschaltung überdauern. 
+sampling_periods_relevant <- sampling_periods %>%
+  filter(WSS_on_within_WS_intervalls==TRUE & WSS_off_within_WS_intervalls==TRUE) %>%
+  mutate(tiercollar = paste(TierID, TierName, CollarID))
+
+# es verbleiben 5 relevante Wildschweine in sampling_periods_relevant. Diese Wildschweine werden nun im Detaildatensatz der Wildschweine, mit allen relevanten Daten, herausgefiltert.
+
+#MIT DIESEM DATENSATZ ARBEITEN WIR FÜR DIE WILDSCHWEINANALYSE
+wildschwein_sf_relevant <- wildschwein_sf %>%
+  filter(tiercollar == "2 Sabine 12275" | tiercollar == "36 Olga 13976" | tiercollar == "40 Franz 12273" | tiercollar == "60 Venus 13969" | tiercollar == "84 Gaby 12274" )
+
+# Es muss wiederum ein Convexhull erstellt werden, für den gefilterten Wildschwiendatensatz
+sampling_periods_relevant_convexhull <- wildschwein_sf_relevant %>%
+  group_by(TierID, TierName, CollarID, tiercollar) %>%
+  summarise() %>%
+  st_convex_hull()
+
+
+# Zuletzt wird nochmal der gleiche Plot wie anfangs erstellt, einfach nur noch mit den relevanten Wildschweinschrecks und den relevanten Wildschweinen.
+plot_boars_schreck_rel_spattemp<-ggplot()+
+ geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar)),alpha=0.5)+
+ geom_sf(data = schreck_agenda_relevant, aes(color=factor(id)))+
+  coord_sf(datum = 2056)+
+  scale_fill_hue(name="Tier")+
+  scale_color_hue(name="Wildschweinschrecks")+
+  theme_minimal()
+
+plot_boars_schreck_rel_spattemp
+```
+
+#### Zwischenschritt: Farbcodes zu den Wildschweinen zuordnen
+```{r Farbcodes zu den Wildschweinen zuordnen, echo=F, results='hide', message=F, warning=F}
+# Hierzu verwenden wir Colorbrewer 2.0 https://colorbrewer2.org/#type=diverging&scheme=RdYlBu&n=5
+Farbset<-c("2 Sabine 12275" = "#d7191c",
+           "36 Olga 13976" = "#fdae61",
+           "40 Franz 12273" = "#ffffbf",
+           "60 Venus 13969" = "#abd9e9",
+           "84 Gaby 12274" = "#2c7bb6")
+Farbset
+
+# der Plot mit allen relevanten SChweinen und allen relevanten WSS wird nochmal geplottet
+plot_boars_schreck_rel_spattemp<-ggplot()+
+ geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar)),alpha=0.5)+
+ geom_sf(data = schreck_agenda_relevant)+ # man könnte auch Farben den Wildschweinschrecks zuordnern, mit dem Zusatz aes(color=factor(id)))
+  coord_sf(datum = 2056)+
+  scale_fill_manual(values=Farbset,  name="Tier")+
+  theme_minimal()
+
+
+plot_boars_schreck_rel_spattemp
+
+```
+
+#### 5. Die Überlappungen der Wildschweine mit den einzelnen Wildschweinschrecks
+Da das Wildschweinverhalten vor und nach der Testphase der Wildschweinschrecks untersucht werden soll, muss analysiert werden, welche Wildschwein-Messungen sich mit welchen Wildschweinschreck-Testphasen überlappen und wie lange eine Überlappung vorliegt. 
+```{r overlaps, echo=F, results='hide', message=F, warning=F}
+# Timelag bestimmen für jeden Wildschweinschreck, um zu schauen, wie lange diese jeweils angemacht sind.
+schreck_agenda_relevant <- schreck_agenda_relevant %>%
+  mutate(timelag_days = as.numeric(difftime(datum_off, datum_on, unit = "days")))
+schreck_agenda_relevant
+# Die Kleinste Zeitperiode ist 5 Tage, was höchst wahrscheinlich nicht genügend Zeit ist für ein Wildschwein um sich daran zu gewöhnen. Dies wird höchstens am Ende noch untersucht, sofern sich herausstellt, dass sie sich so schnell daran gewöhnen. 
+
+# Timelag bestimmenf für jedes Wildschwein, um zu sehen wie lange sie jeweils gemessen werden
+wildschwein_relevant_timelags <- wildschwein_sf_relevant %>%
+  group_by(tiercollar)%>%
+  summarise(teimlag_days = as.numeric(difftime(max(DatetimeUTC),min(DatetimeUTC))))
+
+# oder dasselbe nochmal mit sampling periods
+sampling_periods_relevant <- sampling_periods_relevant %>%
+  mutate(timelag_days = as.numeric(difftime(max,min,unit="days")))
+sampling_periods_relevant
+# Gaby wird mit 55 Tagen am wenigsten lang gemessen. 
+
+plot_WS_WSS<-ggplot()+
+  geom_errorbarh(data = sampling_periods_relevant, aes(xmin=min, xmax=max, y=factor(tiercollar)),color="blue")+
+  geom_errorbarh(data = schreck_agenda_relevant, aes(xmin=datum_on, xmax=datum_off, y=factor(id)),color="green")+
+  scale_x_datetime(date_breaks = "1 month")+  
+  theme_minimal()+
+  theme(axis.text.x = element_text(size = 10, angle=90, hjust=1))+
+  ylab("Wildschweine (blau) und Wildschweinschrecks (grün)")
+plot_WS_WSS
+
+
+# Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist
+# Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
+# Venus ist für die Analyse von WSS_2016_01, WSS_2016_05 und WSS_2016_06 geeignet,
+
+# Basierend darauf entscheiden wir, die Betrachtung von delta T1 bis delta T4 jeweils für eine Woche zu wählen.
+
+```
+
+Als Zwischenfazit nach der explorativen Analyse konnte folgendes herausgefunden werden:
+
+- Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird voraussichtlich ausgeschlossen)
+- Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
+- Venus ist für die Analyse von «WSS_2016_01», «WSS_2016_05» und «WSS_2016_06» geeignet
+- Die initial grossen Datensätze mit vielen irrelevanten Schweinen und Wildschweinschrecks konnten stark reduziert werden. 
+- Die Zeitperioden der verbleibenden Wildschweine überlappen diejenigen der Wildschweinschrecks vor und nach der Testphase .
+
+
