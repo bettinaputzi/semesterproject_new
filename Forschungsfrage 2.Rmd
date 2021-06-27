@@ -1,0 +1,153 @@
+---
+title: "Forschungsfrage 2"
+author: "Bettina Putzi"
+output: html_document
+---
+
+Die zweite Forschungsfrage wird entsprechend der Ergebnissen aus der ersten Forschungsfrage leicht angepasst. Anstelle zu untersuchen, wie sich die Wildschweinverteilung über die Zeit bis nach der Testphase entwickelt, wird wiederum nur auf zwei Zeitspannen (vor und nach dem ersten Alarm, Δt1 und Δt2) fokussiert. 
+
+## Forschungsfrage 2
+
+> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor und während der Testphase mit dem Schreck? 
+
+In der Forschungsfrage 1 konnte kein Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert. Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für zwei der Schweine die Aufenthaltsorte bestimmt werden. 
+
+Als erstes werden die Aufenthaltsorte der Schweine nochmals geplottet, diesmal inklusive weiterein Informationen zu der Umgebung (Unterschiedliche Umrissfarben entsprechen unterschiedichen Umgebungsmerkmalen)
+
+```{r background map 1, echo=F, results='hide', message=F, warning=F }
+crop_fanel <- read_sf("Feldaufnahmen_Fanel.gpkg")
+
+head(crop_fanel)
+
+summary(crop_fanel)
+
+unique(crop_fanel$Frucht)
+
+st_crs(crop_fanel)
+
+overviewplot_maps<-ggplot() +
+  geom_sf(data = crop_fanel,aes(color = Frucht))+
+  geom_sf(data = sampling_periods_relevant_convexhull, aes(fill = factor(tiercollar)), alpha=0.5)+
+  geom_sf(data = schreck_agenda_relevant)+ # man könnte auch Farben den Wildschweinschrecks zuordnen, mit dem Zusatz aes(color=factor(id)))
+  coord_sf(datum = 2056)+
+  theme_minimal()+
+  scale_fill_manual(values = Farbset, name="Tier")+
+  theme(legend.position = "none")
+overviewplot_maps
+```
+
+Zusätzlich wird noch eine Hintergurnd-Map und die Legende ergänzt, sodass die Grundlage noch besser verständlich ist.
+```{r background map 2, echo=F, results='hide', message=F, warning=F }
+# Eine Hintergrundmap einfügen, um zu sehen, ob die Daten zur "Frucht" für die Forschungsfrage 2 ausreichen. das scheint zu passen, nur Franz hält sich auch in Gebieten auf, wo es keine Fruchdaten gibt.
+  
+pk100_BE <- rast("pk100_BE.tif")
+tm_shape(pk100_BE) + 
+  tm_rgb() +
+  tm_shape(crop_fanel)+
+  tm_fill(col="Frucht")+
+  tm_shape(sampling_periods_relevant_convexhull)+
+  tm_polygons(col="tiercollar", alpha=0.5, palette=Farbset, title="Tier")+
+  tm_layout(legend.outside = TRUE)
+```
+
+Jetzt werden für die Aufenthaltsorte der Wildschweine mit den Umgebungsdaten verknüpft. Danach wird berechnet, zu welchem Anteil sich Sabine und Olga in welcher Umgebung aufhalten. Dies wird für sieben Tage vor und sieben Tage nach dem ersten Schrecksignal untersucht. Man hätte hier auch 2 Tage ananlysieren können, um mit Forschungsfrage 1 Vergleiche anstellen zu können. Hier interessiert uns jedoch generell, ob die Schweine sich auf den Feldern aufhalten. Deshalb wird die Zeitspanne (Δt1 und Δt2) hier auf sieben Tage erhöht. 
+
+Der erste Plot zeigt die Aufenthaltsorte der beiden Wildschweine sieben Tage vor dem ersten Signalton (Δt1):
+```{r Umgebungsanalyse before, echo=F,results='hide', message=F, warning=F}
+t1_WSS_2015_01_7d <- t2_WSS_2015_01-days(7)
+t3_WSS_2015_01_7d <- t2_WSS_2015_01+days(7)
+
+Sabi_Olga_t1_t2_01_7d <- wildschwein_sf_relevant%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_7d & DatetimeUTC <= t2_WSS_2015_01 )%>%
+  filter(tiercollar=="36 Olga 13976" | tiercollar== "2 Sabine 12275")
+Sabi_Olga_t1_t2_01_7d
+
+Sabi_Olga_t2_t3_01_7d <- wildschwein_sf_relevant%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_7d )%>%
+  filter(tiercollar=="36 Olga 13976" | tiercollar== "2 Sabine 12275")
+
+Sabi_Olga_1stO_2d_before <-  st_join(Sabi_Olga_t1_t2_01_7d, crop_fanel)
+Sabi_Olga_1stO_2d_after <- st_join(Sabi_Olga_t2_t3_01_7d, crop_fanel)
+
+Sabi_Olga_smry_before <- Sabi_Olga_1stO_2d_before %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+Farbset_Frucht <- c(
+  "Bohnen" = "#b2182b",
+  "Wiese" = "#ef8a62",
+  "other" = "#fddbc7",
+  "Weide" = "#e0e0e0",
+  "Feuchtgebiet" = "#999999",
+  "Wald" = "#4d4d4d")
+
+
+p_1stO_1_before_Sabi_Olga <- ggplot(Sabi_Olga_smry_before, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")+
+  scale_fill_manual(values=Farbset_Frucht)
+p_1stO_1_before_Sabi_Olga
+```
+
+Der erste Plot zeigt die Aufenthaltsorte der beiden Wildschweine sieben Tage nach dem ersten Signalton (Δt2):
+```{r Umgebungsanalyse after, echo=F,results='hide', message=F, warning=F}
+Sabi_Olga_smry_after <- Sabi_Olga_1stO_2d_after %>%
+  st_set_geometry(NULL) %>%
+  mutate(
+    hour = hour(round_date(DatetimeUTC,"hour")),
+    Frucht = ifelse(is.na(Frucht),"other",Frucht),
+    Frucht = fct_lump(Frucht, 5,other_level = "other"),
+  ) %>%
+  group_by(tiercollar ,hour,Frucht) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(tiercollar , hour) %>%
+  mutate(perc = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(
+    Frucht = fct_reorder(Frucht, n,sum, desc = TRUE)
+  )
+
+p_1stO_1_after_Sabi_Olga <- ggplot(Sabi_Olga_smry_after, aes(hour,perc, fill = Frucht)) +
+  geom_col(width = 1) +
+  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  facet_wrap(~tiercollar ) +
+  theme_light() +
+   theme(legend.position="bottom")+
+  scale_fill_manual(values=Farbset_Frucht)
+p_1stO_1_after_Sabi_Olga
+
+```
+
+Für Sabine hat sich gezeigt, dass Sie sich sowieso im Wald und Feuchtgebiet aufgehalten hat und nicht auf die Felder ging. Entsprechend hat sie sich dort wohl nicht bedroht gefühlt. Sie ist auch nach dem der Schreck eingeschaltet wurde nicht auf die Felder gegangen. Es lässt sich nicht sagen, ob sie ohne den Wildschweinschreck auf das Feld gegangen wäre. Aus den Ergebnissen der Forschungsfrage 1 wissen wir, dass sie sich zum Zeitpunkt der Einschaltung des Wildschweinschrecks recht weit davon entfernt aufgehalten hat. 
+
+
+Olga hat sich vor dem ersten Schrecksignal auch mal in den Bohnen, der Wiese oder der Weide aufgehalten. Nachdem der Wildschweinschreck in Betrieb genommen wurde, hat sie das noch immer gemacht. Es kann nicht mit Sicherheit gesagt werden, ob sie ihr Verhalten aufgrund des Schrecks geändert hätte.
+
+
+Es kann hier noch geprüft werden, wo denn der potenziell beeinflussende Wildschweinschreck steht:
+```{r Standort Wildschweinschreck 2015_01}
+WSS_2015_01_crop <-  st_join(WSS_2015_01, crop_fanel)
+WSS_2015_01_crop$Frucht
+```
+
+Der Wildschweinschreck steht in den Bohnen. Olga ist trotzdem noch in die Bohnen geganen, wenn auch vermeintlich etwas weniger. Ob dies signifikant wengier ist, lässt sich explorativ nicht beantworten und könnte in einer Nachfolgeuntersuchung genauer studiert werden. 
+
