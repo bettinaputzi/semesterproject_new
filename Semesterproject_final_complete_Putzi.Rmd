@@ -1,0 +1,60 @@
+---
+title: "Finales Dokument Semesterprojekt Wildschweinschreck von Bettina Putzi"
+author: "Bettina Putzi"
+date: "28.06.2021"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Einleitung
+Für die Untersuchung zur Wirkung des Wildschweinschrecks wurde ein Gebiet im Kanton Bern namens Fanel untersucht. Dort wurden über mehrere Jahre Wildschweine mit GPS-Halsbändern, die im Grundintervall alle 15 Minuten einen Positionspunkt lieferten, getrackt. Im Gebiet dieser Wildschweine wurden Wildschweinschrecks installiert und über unterschiedliche Zeiträume zur Wildschweinvergrähmung genutzt.
+
+Die vorliegende Studie möchte den Einfluss des Wildschweinschrecks untersuchen. Dafür werden unterschiedliche Zeitperioden genauer analysiert. Dies sind
+
+- Δt1: Zeitspanne 5 Stunden und 2 Tage oder 7 Tage vor dem ersten Alarm eines Wildschweinschrecks
+- Δt2: Zeitspanne 5 Stunden und 2 Tage oder 7 Tage nach dem ersten Alarm eines Wildschweinschrecks (bzw. in der Anfangsperiode einer Wildschweinschreck-Testperiode)
+
+Bei einer klaren Beeinflussung durch den Wildschweinschreck werden zustätzlich noch folgende Zeitspannen näher untersucht:
+
+- Δt3: Zeitspanne 5 Stunden und 2 Tage oder 7 Tage vor dem letzten Alarm eines Wildschweinschrecks (bzw. in der Endperiode einer Wildschweinschreck-Testperiode)
+- Δt4: Zeitspanne 5 Stunden und 2 Tage oder 7 Tage nach dem letzten Alarm eines Wildschweinschrecks
+
+Nachfolgend ist illustriert, welche Perioden analysiert werden.
+
+```{r Zeitperioden, echo=F, message=F, warning=F, fig.cap="Zeitpunkte und Zeitperioden der Untersuchung"}
+knitr::include_graphics("zeitperioden.png")
+```
+
+Die Studie unterteilt sich in drei Haupt-Teile. 
+
+1. Anhand einer Voranalyse werden die Daten von mehreren Wildschweinen und Wildschweinschrecks betrachtet, umgeformt, und reduziert. So bleiben reduzierte Datensets zurück, mit denen die eingangs erwähnte Analyse durchgeführt werden kann (die Datensätze werden mit dem Vermerk  *"_relevant"* bezeichnet). 
+2. Die erste Forschungsfrage beschäftigt sich mit den Wildschwein-Verhalten (räumlich zeitliche Bewegugsbahnen) vor (Δt1), während (Δt2, Δt3) und allenfalls nach (Δt4) der Wildschweinschreck-Testperiode. Insbesondere der Effektbereich ist von interesse. Dies sind sogenannte **second Order Effects**.
+3. Die zweite Forschungsfrage beschäftigt sich mit dem Verhalten der Wildschweine in Bezug auf die Umgebung. Es wird untersucht, ob es eine Verschiebung der bevorzugten Umgebung gibt. Dies bezeichnet sogenannte **fist Order Effects**. 
+
+Hauptteil 1 wird im nachfolgenden Kapitel dokumentiert:
+
+```{r child='Voranalyse.Rmd'}
+
+```
+
+```{r child='Forschungsfrage 1.Rmd'}
+
+```
+
+```{r child='Forschungsfrage 2.Rmd'}
+
+```
+
+## Diskussion
+
+Folgende Punkte sind zu berücksichtigen
+ 
+ - Es wäre besser noch mehr Schweine die zum Zeitpunkt des ersten Schrecksignals nahe am Schreck sind zu untersuchen. Ein klarer Effektbereich konnte anhand dieser Studie nicht definiert werden. 
+ - Es ist zu untersuchen, ob Wildschweinschreck-Richtung und Lautstärke einen Einfluss haben.
+ - Es ist zu untersuchen, ob die Wildschweine die Schrecks aus anderen Jahren (z.B.2014) schon kannten und dies einen Einfluss haben könnte. 
+ - Es wäre zu analyiseren, inwiefern sich die Wildschweine an den Schreck gewöhnen (Δt3 und Δt4). Das musste hier leider vernachlässigt werden, da keine klaren Resultate den Einfluss des Schrecks belegten. 
+ - Die fist Order Effects könnte man anhand statistischer Methoden weiter untersuchen um beispielsweise zu ergründen, ob die Unterschiede der Aufenthaltsorte siginifkant sind. 
+ - **weitere folgen...**
+ 
