@@ -1,9 +1,7 @@
 ---
 title: "Voranalyse und Datesatzreduktion"
 author: "Bettina Putzi"
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
 
 
