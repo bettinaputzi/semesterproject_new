@@ -8,9 +8,9 @@ Die zweite Forschungsfrage wird entsprechend der Ergebnissen aus der ersten Fors
 
 ## Forschungsfrage 2
 
-> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor und während der Testphase mit dem Schreck? 
+> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor und während der Testphase mit dem Schreck (First Order Effects Analyse)? 
 
-In der Forschungsfrage 1 konnte kein Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert. Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für zwei der Schweine die Aufenthaltsorte bestimmt werden. 
+In der Forschungsfrage 1 konnte kein Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert (Gudmundsson et al., 2012). Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für zwei der Schweine die Aufenthaltsorte bestimmt werden. 
 
 Als erstes werden die Aufenthaltsorte der Schweine nochmals geplottet, diesmal inklusive weiterein Informationen zu der Umgebung (Unterschiedliche Umrissfarben entsprechen unterschiedichen Umgebungsmerkmalen)
 
