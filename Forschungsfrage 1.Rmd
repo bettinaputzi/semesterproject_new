@@ -6,7 +6,7 @@ output: html_document
 
 ## Forschungsfrage 1 
 
-> Wie kann der Effektbereich der Wildschwein-Schrecks von den räumlich-zeitlichen Laufbahnen der Wildschweine hergeleitet werden? 
+> Wie kann der Effektbereich der Wildschwein-Schrecks von den räumlich-zeitlichen Laufbahnen der Wildschweine hergeleitet werden (Second Order Effects Analyse)? 
 
 Eine Studie der ZHAW erklärt folgendes: "Die Wahrscheinlichkeit, dass der nächtliche Immissionsgrenzwert von 55 dB(A) durch die Geräusche des Wildschweinschrecks bei Einstellung der maximalen Lautstärke überschritten wird, liegt bei den Distanzen von 2m, 10m und 50m bei 100%. Bei 100m und 200m liegt diese Wahrscheinlichkeit immer noch bei über 90%, hingegen bei 500m nur noch bei 20%. Bei 1000m Distanz liegt die Wahrscheinlichkeit der Überschreitung der gesetzlichen Immissionsgrenzwerte bei 0% und ab 1500m sind keine Geräusche mehr messbar (Krähenmann 2015).» (Suter et al., 2018, 23f.). Entsprechend wird hier als ersten Anhaltspunkt angenommen, dass mindestens bei 200 Meter ein Einfluss des Schrecks auf die Wildschweine vermutbar wäre. 
 
