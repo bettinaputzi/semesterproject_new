@@ -4,15 +4,16 @@ author: "Bettina Putzi"
 output: html_document
 ---
 
-Die zweite Forschungsfrage wird entsprechend der Ergebnissen aus der ersten Forschungsfrage leicht angepasst. Anstelle zu untersuchen, wie sich die Wildschweinverteilung über die Zeit bis nach der Testphase entwickelt, wird wiederum nur auf zwei Zeitspannen (vor und nach dem ersten Alarm, Δt1 und Δt2) fokussiert. 
 
-## Forschungsfrage 2
+## Teil 3: Forschungsfrage 2, First Order Effects
 
-> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor und während der Testphase mit dem Schreck (First Order Effects Analyse)? 
+> Wie entwickelt sich die räumlich-zeitliche Verteilung der Wildschweine vor und während der Testphase mit dem Schreck? 
 
-In der Forschungsfrage 1 konnte kein Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert (Gudmundsson et al., 2012). Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für zwei der Schweine die Aufenthaltsorte bestimmt werden. 
+Die zweite Forschungsfrage wird entsprechend der Ergebnissen aus der ersten Forschungsfrage leicht angepasst. Anstelle zu untersuchen, wie sich die Wildschweinverteilung über die Zeit bis nach der Testphase entwickelt, wird wiederum nur auf zwei Zeitspannen (vor und nach dem ersten Alarm, Δt1 und Δt2) fokussiert. Ausserdem werden nur die zwei Wildschweine Sabine und Olga mit Wildschweinschreck *2015_01* untersucht, für die anderen Kombinationen eine zu unrealistische Distanz für eine Vergrähmung errechnet wurde. 
 
-Als erstes werden die Aufenthaltsorte der Schweine nochmals geplottet, diesmal inklusive weiterein Informationen zu der Umgebung (Unterschiedliche Umrissfarben entsprechen unterschiedichen Umgebungsmerkmalen)
+In der Forschungsfrage 1 konnte keinen Einfluss der Wildschweinschrecks auf die Wildschweine nachgewiesen werden. Es könnte jedoch sein, dass der Einbezug von First Order Effects dieses Bild ändert (Gudmundsson et al., 2012). Es könnte ja sein, dass die Wildschweine beispielsweise in der Nähe des Schrecks bleiben, sie sich jedoch mehr im Wald aufhalten als davor. Dem wird mit Forschungsfrage 2 nachgegangen, indem für Sabine und Olga die Aufenthaltsorte bestimmt werden.  
+
+Als erstes werden die Aufenthaltsorte der Schweine nochmals geplottet, diesmal inklusive weiteren Informationen zu der Umgebung. Unterschiedliche Umrissfarben entsprechen dabei unterschiedichen Umgebungsmerkmalen.
 
 ```{r background map 1, echo=F, results='hide', message=F, warning=F }
 crop_fanel <- read_sf("Feldaufnahmen_Fanel.gpkg")
@@ -50,7 +51,7 @@ tm_shape(pk100_BE) +
   tm_layout(legend.outside = TRUE)
 ```
 
-Jetzt werden für die Aufenthaltsorte der Wildschweine mit den Umgebungsdaten verknüpft. Danach wird berechnet, zu welchem Anteil sich Sabine und Olga in welcher Umgebung aufhalten. Dies wird für sieben Tage vor und sieben Tage nach dem ersten Schrecksignal untersucht. Man hätte hier auch 2 Tage ananlysieren können, um mit Forschungsfrage 1 Vergleiche anstellen zu können. Hier interessiert uns jedoch generell, ob die Schweine sich auf den Feldern aufhalten. Deshalb wird die Zeitspanne (Δt1 und Δt2) hier auf sieben Tage erhöht. 
+Jetzt werden die Aufenthaltsorte der Wildschweine mit den Umgebungsdaten verknüpft. Danach wird berechnet, zu welchem Anteil sich Sabine und Olga in welcher Umgebung aufhalten. Dies wird für sieben Tage vor und sieben Tage nach dem ersten Schrecksignal untersucht. Man hätte hier auch 2 Tage ananlysieren können, um mit Forschungsfrage 1 Vergleiche anstellen zu können. Hier interessiert uns jedoch generell, ob die Schweine sich auf den Feldern aufhalten. Deshalb wird die Zeitspanne (Δt1 und Δt2) hier auf sieben Tage erhöht. 
 
 Der erste Plot zeigt die Aufenthaltsorte der beiden Wildschweine sieben Tage vor dem ersten Signalton (Δt1):
 ```{r Umgebungsanalyse before, echo=F,results='hide', message=F, warning=F}
@@ -97,8 +98,8 @@ Farbset_Frucht <- c(
 
 p_1stO_1_before_Sabi_Olga <- ggplot(Sabi_Olga_smry_before, aes(hour,perc, fill = Frucht)) +
   geom_col(width = 1) +
-  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
-  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  scale_y_continuous(name = "Prozentsatz", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Zeit (gerunded zur nächsten Stunde)") +
   facet_wrap(~tiercollar ) +
   theme_light() +
    theme(legend.position="bottom")+
@@ -127,8 +128,8 @@ Sabi_Olga_smry_after <- Sabi_Olga_1stO_2d_after %>%
 
 p_1stO_1_after_Sabi_Olga <- ggplot(Sabi_Olga_smry_after, aes(hour,perc, fill = Frucht)) +
   geom_col(width = 1) +
-  scale_y_continuous(name = "Percentage", labels = scales::percent_format()) +
-  scale_x_continuous(name = "Time (rounded to the nearest hour)") +
+  scale_y_continuous(name = "Prozentsatz", labels = scales::percent_format()) +
+  scale_x_continuous(name = "Zeit (gerundet, zur nächsten Stunde)") +
   facet_wrap(~tiercollar ) +
   theme_light() +
    theme(legend.position="bottom")+
@@ -151,3 +152,5 @@ WSS_2015_01_crop$Frucht
 
 Der Wildschweinschreck steht in den Bohnen. Olga ist trotzdem noch in die Bohnen geganen, wenn auch vermeintlich etwas weniger. Ob dies signifikant wengier ist, lässt sich explorativ nicht beantworten und könnte in einer Nachfolgeuntersuchung genauer studiert werden. 
 
+### Fazit Forschungsfrage 2
+Auch für Forschungsfrage 2 konnte mit der vorliegenden Untersuchung keine klare Beeinflussung der Wildschweinschrecks auf die Wildschweine festgestellt werden. Es hat sich gezeigt, dass Sabine vor und nach dem ersten Schreckalarm von Schreck 2015_01 wohl nie auf dem Feld war (NA's vorbehalten). Bei Olga konnte keine klare Veränderung ihres Verhaltens festgestellt werden, sie schien sogar weiterhin auf das Bohnenfeld zu gehen - trotz Schreck. 
