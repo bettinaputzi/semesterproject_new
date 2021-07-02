@@ -38,9 +38,8 @@ schreck_locations<-schreck_locations
 ```
 
 
-## Übersicht und Dataset-Reduktion
+## Teil 1: Übersicht und Dataset-Reduktion
 Zuerst wird eine explorative Datenanalyse durchgeführt, um zu entscheiden, welche Tiere und welche Wildschweinschrecks für die Analysen einbezogen werden sollten. Es sollten Tiere sein, die sich **während der Laufzeit** der Wildschweinschrecks in deren Nähe befanden. Dabei sollten im Datensatz **Positionsdaten der Wildschweine vor, während und nach der Laufzeit** der Wildschweinschrecks vorhanden sein. Einige Eckpunkte daraus werden nachfolgend kurz beschrieben:
-
 
 ```{r Nils Code on sampling regime, include=F, eval=T}
 limits <- c(0,200)
@@ -57,20 +56,26 @@ wildschwein_BE<-wildschwein_BE %>%
 
 ```
 
+
 #### 1. Übersicht der getrackten 19 Wildschweine im Originaldatensatz für die Definition des maximal zu untersuchenden Zeitintervalls
 Minimum-Datum: 2014-05-28, Maximum-Datum: 2016-10-18
+
 ```{r Plot_sampling_regime, echo=F, results='hide', message=F, warning=F}
 ggplot(wildschwein_BE,aes(DatetimeUTC, TierName, colour = timelag)) +
   geom_line(lwd = 10) +
   scale_color_gradientn(name = "Sampling interval", colours = RColorBrewer::brewer.pal(11, "Spectral"), limits = limits, na.value = NA, oob = scales::squish, breaks = seq(0,200,50), labels = labels) +
   theme_minimal() +
   theme(legend.position = "top") +
-  guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barwidth = unit(20, "lines"), barheight = unit(.5, "lines")))
+  guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barwidth = unit(20, "lines"), barheight = unit(.5, "lines")))+
+   ylab("Tier")+
+  xlab("Zeit")
+
 ```
 
 
-#### 2. Geografische Zusammenhänge zwischen den Wildschweinen und den Wildschweinschrecks:
-Visualisierung der Aufenthaltsgebiete mit allen vorhandenen Positionspunkte pro Individuum, um die maximale räumliche Ausdehnung darstellen zu können.Die Convex-Hulls stellen das Einflussgebiet der verschiedenen Wildschweine dar, die Punkte die Wildschweinschrecks.
+#### 2. Geografische Zusammenhänge zwischen den Wildschweinen und den Wildschweinschrecks
+Visualisierung der Aufenthaltsgebiete mit allen vorhandenen Positionspunkte pro Individuum, um die maximale räumliche Ausdehnung darstellen zu können. Die Convex-Hulls stellen das Einflussgebiet der verschiedenen Wildschweine dar und die Punkte die Wildschweinschrecks.
+
 ```{r spatial_overlaps, echo=F, results='hide', message=F, warning=F}
 # Ortsbezogne Wildschweindaten werden  CRS 2056 zugewiesen
 wildschwein_sf <- wildschwein_BE %>%
@@ -118,9 +123,10 @@ plot_boars_schreck<-ggplot()+
 plot_boars_schreck
 ```
 
+Diejenigen Wildschweinschrecks, die nicht in den Convex-Hulls der Wildschweine sind, werden herausgefiltert. In dessen Nähe haben sich die Wildschweine nie aufgehalten. Dies wird explorativ gemäss dem letzten Plot gemacht, indem die Koordinaten eingegrenzt werden (X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000). 
 
-Wildschweinschrecks herausfiltern, die nicht in den Convex-Hulls der Wildschweine sind, d.h. in deren Nähe sich die Wildschweine nicht aufgehalten haben --> explorativ gemäss dem Plot, indem die Koordinaten eingegrenzt werden (X <= 2580000 & X>2560000 & Y <= 1210000   & Y > 119000). 
 **Feststellung**: Viele Schrecks liegen ausserhalb des Aufenthaltsgebietes der Wildschweine.
+
 ```{r relevant_spatial_overlaps, echo=F, results='hide', message=F, warning=F}
 # jetzt können alle Wildschweinschrecks rausgefiltert werden, die nicht in den convex hulls sind. Viele der Wildschweinschrecks sind ausserhalb des Aufenthaltsgebiets von Wildschweinen. Wir machen das explorativ, d.h. wir grenzen die Koordinaten gemäss dem Plot ein.
 WSS_sf_relevant <- WSS_sf%>%
@@ -133,17 +139,17 @@ plot_boars_schreck_rel<-ggplot()+
   coord_sf(datum = 2056)+ 
   theme_minimal()+
   theme(legend.position = "none")
-  
 
-plot_boars_schreck_rel
 ```
 
 
+
 ####	3. Zeitlich und geografisch relevante Wildschweinschrecks in Abhängigkeit von den Wildschweindaten
-Alle Daten der Schrecks löschen, die sich nicht mit den zeitlichen Wildschweindaten überschneiden, bzw. die vor und nach dem Tracking der Wildschweine laufen (Aus Task 1)
+All diejenigen Schreckdaten werden gelöscht, die sich nicht mit den Zeitperioden der Wildschweindaten überschneiden. Das sind die Schrecks die vor und nach dem Tracking der Wildschweine laufen (Aus Task 1). So entsteht der Datensatz, der nur noch die für diese Studie relevanten Wildschweinschrecks enthält. 
+
 ```{r  spatio-temporal-relevant-schrecks, echo=F, results='hide', message=F, warning=F}
 
-# alle Daten die sich nicht mit den Wilschweinen überschneiden löschen
+# alle Daten die sich nicht mit den Wildschweinen überschneiden löschen
 summary(wildschwein_BE$DatetimeUTC)
 schreck_agenda_relevant <- schreck_agenda%>%
   filter(datum_on > "2014-05-28" & datum_on < "2016-10-18") # somit sind alle Schrecks rausgefiltert, die vor der Messung der Wildschweine schon einen Alarmton von sich geben und alle Schrecks die nach der Periode der Wildschweinmessung noch einen Ton von sich geben. Denn basierend darauf können wir keine Analysen machen. 
@@ -158,16 +164,20 @@ schreck_agenda_relevant$modus<-as.factor(schreck_agenda_relevant$modus)
 
 ggplot(schreck_agenda_relevant, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
          geom_errorbarh(aes(color = modus))+
-  theme_minimal()
+  theme_minimal()+
+  ylab("Schreck ID")+
+  xlab("Zeit")
+  
 
-# udn ein kurzer Blick in alle Schreck-Daten:
+# und ein kurzer Blick in alle Schreck-Daten:
 # ggplot(schreck_agenda, aes(xmin = datum_on, xmax = datum_off, y=factor(id)))+
 #          geom_errorbarh(aes(color = modus))
 ```
 
 
 #### 4. Wildschweine, deren Zeitintervalle sich mit denjenigen der relevanten Wildschweinschrecks überlappen
-Wildschweine herausfiltern mit Trackingdaten vor, im Verlauf und nach der Schreck-Laufdauer.
+Die Wildschweine mit Trackingdaten vor, im Verlauf und nach der Schreck-Laufdauer werden herausgefiltert. So entsteht der neue Wildschweindatensatz, der nur noch relevante Wildschweine enthält. 
+
 ```{r welche wildschweine werden zeitgleich mit dem Wildschweinschreck-Alarm gemessen, echo=F, results='hide', message=F, warning=F}
 
 # Nachfolgend werden die Samplingperioden mit den Werten mix und max pro Tier und Halsband identifiziert
@@ -214,7 +224,9 @@ plot_boars_schreck_rel_spattemp<-ggplot()+
 plot_boars_schreck_rel_spattemp
 ```
 
+
 #### Zwischenschritt: Farbcodes zu den Wildschweinen zuordnen
+
 ```{r Farbcodes zu den Wildschweinen zuordnen, echo=F, results='hide', message=F, warning=F}
 # Hierzu verwenden wir Colorbrewer 2.0 https://colorbrewer2.org/#type=diverging&scheme=RdYlBu&n=5
 Farbset<-c("2 Sabine 12275" = "#d7191c",
@@ -237,8 +249,10 @@ plot_boars_schreck_rel_spattemp
 
 ```
 
+
 #### 5. Die Überlappungen der Wildschweine mit den einzelnen Wildschweinschrecks
 Da das Wildschweinverhalten vor und nach der Testphase der Wildschweinschrecks untersucht werden soll, muss analysiert werden, welche Wildschwein-Messungen sich mit welchen Wildschweinschreck-Testphasen überlappen und wie lange eine Überlappung vorliegt. 
+
 ```{r overlaps, echo=F, results='hide', message=F, warning=F}
 # Timelag bestimmen für jeden Wildschweinschreck, um zu schauen, wie lange diese jeweils angemacht sind.
 schreck_agenda_relevant <- schreck_agenda_relevant %>%
@@ -275,9 +289,11 @@ plot_WS_WSS
 
 ```
 
+
+### Fazit Voranalyse 
 Als Zwischenfazit nach der explorativen Analyse konnte folgendes herausgefunden werden:
 
-- Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird voraussichtlich ausgeschlossen)
+- Gaby wäre für WSS_2016_13 geeignet, wobei dieser Wildschweinschreck mit 5 Tagen sehr kurz in Betrieb ist (wird deshalb von der weiteren Untersuchung ausgeschlossen)
 - Sabine, Olga und Franz eignen sich alle drei für die drei Wildschweinschrecks "WSS_2015_01", "WSS_2015_03" und "WSS_2015_04"
 - Venus ist für die Analyse von «WSS_2016_01», «WSS_2016_05» und «WSS_2016_06» geeignet
 - Die initial grossen Datensätze mit vielen irrelevanten Schweinen und Wildschweinschrecks konnten stark reduziert werden. 
