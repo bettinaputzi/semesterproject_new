@@ -340,7 +340,7 @@ Olga_t2_t3_01_2d_nacht <- Olga_t2_t3_01_2d %>%
   filter(day != "Tag") 
 
 plot_olga_night_5h<-ggplot() +
-  geom_path(data = Olga_t1_t2_01_5h_nacht, aes(X,Y, color="5h zuvor (kein Weg, da Tagestrips ausgeschlossen)")) +
+  geom_path(data = Olga_t1_t2_01_5h_nacht, aes(X,Y, color="5h zuvor (ohne Tagestrips!)")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4)+
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=-1)+
   geom_point(data = Olga_t2_t3_01_5h_nacht[18,], aes(X,Y),color="green",size=4)+
