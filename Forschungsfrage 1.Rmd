@@ -4,15 +4,16 @@ author: "Bettina Putzi"
 output: html_document
 ---
 
-## Forschungsfrage 1 
+## Teil 2: Forschungsfrage 1, Second Order Effects
 
-> Wie kann der Effektbereich der Wildschwein-Schrecks von den räumlich-zeitlichen Laufbahnen der Wildschweine hergeleitet werden (Second Order Effects Analyse)? 
+> Wie kann der Effektbereich der Wildschwein-Schrecks von den räumlich-zeitlichen Laufbahnen der Wildschweine hergeleitet werden? 
 
-Eine Studie der ZHAW erklärt folgendes: "Die Wahrscheinlichkeit, dass der nächtliche Immissionsgrenzwert von 55 dB(A) durch die Geräusche des Wildschweinschrecks bei Einstellung der maximalen Lautstärke überschritten wird, liegt bei den Distanzen von 2m, 10m und 50m bei 100%. Bei 100m und 200m liegt diese Wahrscheinlichkeit immer noch bei über 90%, hingegen bei 500m nur noch bei 20%. Bei 1000m Distanz liegt die Wahrscheinlichkeit der Überschreitung der gesetzlichen Immissionsgrenzwerte bei 0% und ab 1500m sind keine Geräusche mehr messbar (Krähenmann 2015).» (Suter et al., 2018, 23f.). Entsprechend wird hier als ersten Anhaltspunkt angenommen, dass mindestens bei 200 Meter ein Einfluss des Schrecks auf die Wildschweine vermutbar wäre. 
+Eine Studie der ZHAW erklärt folgendes: "Die Wahrscheinlichkeit, dass der nächtliche Immissionsgrenzwert von 55 dB(A) durch die Geräusche des Wildschweinschrecks bei Einstellung der maximalen Lautstärke überschritten wird, liegt bei den Distanzen von 2m, 10m und 50m bei 100%. Bei 100m und 200m liegt diese Wahrscheinlichkeit immer noch bei über 90%, hingegen bei 500m nur noch bei 20%. Bei 1000m Distanz liegt die Wahrscheinlichkeit der Überschreitung der gesetzlichen Immissionsgrenzwerte bei 0% und ab 1500m sind keine Geräusche mehr messbar.» (Suter et al., 2018, 23f.). Entsprechend wird hier als ersten Anhaltspunkt angenommen, dass mindestens bei 200 Meter ein Einfluss des Schrecks auf die Wildschweine vermutbar wäre. 
 
-Als datenbasierte mögliche Messgrösse könnte Beispielsweise der Abstand zum Schrecks nach Ertönen vor und nach des ersten Signaltons zu Zeitpunkt t2 analysiert werden. Dazu muss aber zuerst untersucht werden, welche Wildschweine sich denn in der Nähe welches Schrecks aufhalten. Dazu wird die Minimaldistanz zu den in der Explorativen Analyse definierten relevanten Schrecks und Wildschweinen analysiert.
+Als datenbasierte mögliche Messgrösse könnte Beispielsweise der Abstand zum Schrecks nach Ertönen vor und nach des ersten Signaltons zu Zeitpunkt t2 analysiert werden. Dazu muss aber zuerst untersucht werden, welche Wildschweine sich denn in der Nähe welches Schrecks aufhalten. Hierfür wird die Minimaldistanz zu den in der explorativen Analyse definierten relevanten Schrecks und Wildschweinen analysiert.
 
-Die folgende Tabelle stellt die Minimaldistanzen zum Wildschwienschreck pro Wildschwein dar. Unter der vorher getroffenen Annahme von 200 Meter Einflussbereich, würde mindestens Sabine von drei Wildschwieinschrecks beeinflusst werden, sowie Olga von einem. 
+Die folgende Tabelle stellt die Minimaldistanzen zum Wildschwienschreck pro Wildschwein dar. Unter der vorher getroffenen Annahme von 200 Meter Einflussbereich, würde mindestens Sabine von drei Wildschwieinschrecks beeinflusst werden, sowie Olga und Franz von je einem. 
+
 ```{r minimal distance, include=F}
 #wieder Wildschwein_sf_relevant und schreck_agenda_relevant arbeiten. Wie bringen wir die zwei Tabellen zusammen?
 
@@ -122,8 +123,11 @@ Mind_dist_table <-data.frame(WSS=c("2015_01","2015_03","2015_04", "2016_01","201
 knitr::kable(Mind_dist_table,capiton="Minimaldistanzen zwischen den Wildschwienschrecks und den Wildschweinen")
 ```
 
-Sabine und Olga werden entsprechend näher untersucht. Dazu werden erst einmal die Wege der Schweine für unterschiedliche Zeitperioden vor ertönen des ersten Schrecks nach Ertönen des ersten Schrecks abgebildet. Diese Zeipterioden (Δt1 und Δt2) werden auf fünf Stunden und zwei Tage festgelegt. 
-Die folgende Grafik untersucht das Verhalten von Sabine in Abhängigkeit des Wildschweinschrecks *2015_04*
+Sabine, Franz und Olga werden entsprechend näher untersucht. Dazu werden die Wege der Schweine für unterschiedliche Zeitperioden vor ertönen des ersten Schrecks nach Ertönen des ersten Schrecks abgebildet. Diese Zeipterioden (Δt1 und Δt2) werden auf **fünf Stunden** und **zwei Tage** festgelegt. Auch die Distanz zum Zeitpunkt des ersten Schrecksignals (t2) wird berücksichtigt.
+
+
+### Untersuchung Sabine 
+Die folgende Grafik untersucht das Verhalten von Sabine in Abhängigkeit des Wildschweinschrecks *2015_04*, jeweils fünf Stunden und 2 Tag vor und nach dem ersten Schrecksignal. 
 
 ```{r Research Question 1 Sabine-WSS 2015_04, echo=F, results='hide', message=F, warning=F }
 # ich möchte Sabine nun genauer untersuchen
@@ -155,28 +159,30 @@ Sabine_t2_t3_04_2d <- Sabine%>%
   filter(DatetimeUTC >= t2_WSS_2015_04 & DatetimeUTC < t3_WSS_2015_04_2d )
 
 plot_5h<- ggplot() +
-  geom_path(data = Sabine_t1_t2_04_5h, aes(X,Y, color="5h before")) +
+  geom_path(data = Sabine_t1_t2_04_5h, aes(X,Y, color="5h zuvor")) +
   geom_point(data = schreck_agenda_2015_04, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_04, aes(X,Y,label=id),hjust=+1,vjust=+2)+
-  geom_path(data = Sabine_t2_t3_04_5h, aes(X,Y, color="5h after")) +
+  geom_path(data = Sabine_t2_t3_04_5h, aes(X,Y, color="5h danach")) +
   #labs(color="Trajectory", title = "Der Vergleich von Sabine 5h vor und 5h nach dem ersten Ertönen des Schrecks")  +
   theme_minimal()+
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  labs(color="Laufweg")
 
 plot_2d<-ggplot() +
-  geom_path(data = Sabine_t1_t2_04_2d, aes(X,Y, color="2 days before")) +
-  geom_path(data = Sabine_t2_t3_04_2d, aes(X,Y, color="2 days after")) +
+  geom_path(data = Sabine_t1_t2_04_2d, aes(X,Y, color="2 Tage zuvor")) +
+  geom_path(data = Sabine_t2_t3_04_2d, aes(X,Y, color="2 Tage danach")) +
   geom_point(data = schreck_agenda_2015_04, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_04, aes(X,Y,label=id),hjust=+1,vjust=+2)+
   #labs(color="Trajectory", title = "Der Vergleich von Sabine zwei Tage vor und zwei Tage nach dem ersten Ertönen des Schrecks")  +
   theme_minimal()+
-   theme(legend.position="bottom")
+   theme(legend.position="bottom")+
+  labs(color="Laufweg")
 
 
 plot_grid(plot_5h, plot_2d, labels="AUTO")
 ```
 
-Der Wildschweinschreck *2015_04* scheint keinen Einfluss auf das Verhalten von Sabine zu haben. Die Distanz zum Wildschweinschreck zum Zeitpunkt des ersten Ertönens (t2) wird angeschaut. Bei dieser Distanz lässt sich das Wildschwein wohl nicht stören und geht sogar noch etwas näher ran. Dies war zu erwarten, da mit 1740 Meter Distanz zum Zeitpunkt t2 die Distanz bereits sehr lang ist.
+Der Wildschweinschreck *2015_04* scheint keinen Einfluss auf das Verhalten von Sabine zu haben. Die Distanz von Sabine zum Wildschweinschreck zum Zeitpunkt des ersten Ertönens (t2) zeigt eine bereits sehr lange Distanz von 1740 Meter. Bei dieser Distanz lässt sich das Wildschwein wohl nicht stören und geht sogar noch etwas näher ran. 
 
 ```{r Distanz zum WWS zum Zeitpunkt des ersten Tons Sabine-WSS 2015_04}
 Sabine_t2_t3_04_2d$distance_2015_04[1]
@@ -207,34 +213,88 @@ Sabine_t2_t3_01_2d <- Sabine%>%
 
 
 plot_5h_01<- ggplot() +
-  geom_path(data = Sabine_t1_t2_01_5h, aes(X,Y, color="5h before")) +
+  geom_path(data = Sabine_t1_t2_01_5h, aes(X,Y, color="5h zuvor")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=+2)+
-  geom_path(data = Sabine_t2_t3_01_5h, aes(X,Y, color="5h after")) +
+  geom_path(data = Sabine_t2_t3_01_5h, aes(X,Y, color="5h danach")) +
   #labs(color="Trajectory", title = "Der Vergleich von Sabine 5h vor und 5h nach dem ersten Ertönen des Schrecks")  +
   theme_minimal()+
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  labs(color="Laufweg")
 
 plot_2d_01<-ggplot() +
-  geom_path(data = Sabine_t1_t2_01_2d, aes(X,Y, color="2 days before")) +
-  geom_path(data = Sabine_t2_t3_01_2d, aes(X,Y, color="2 days after")) +
+  geom_path(data = Sabine_t1_t2_01_2d, aes(X,Y, color="2 Tage zuvor")) +
+  geom_path(data = Sabine_t2_t3_01_2d, aes(X,Y, color="2 Tage danach")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=+2)+
   #labs(color="Trajectory", title = "Der Vergleich von Sabine zwei Tage vor und zwei Tage nach dem ersten Ertönen des Schrecks")  +
   theme_minimal()+
-   theme(legend.position="bottom")
+   theme(legend.position="bottom")+
+  labs(color="Laufweg")
 
 plot_grid(plot_5h_01, plot_2d_01, labels="AUTO")
 
 ```
 
-Auch hier ist kaum ein Einfluss des Wildschweinschrecks auf das Wildschwein zu erkennen. Dies bei einer Distanz zum Wildschweinschreck zu Zeitpunkt t2 von 884 Meter. Das Tier geht zwar kurzfirstig etwas weiter weg, kommt dann aber zurück und hält sich sogar noch näher beim Schreck auf, als davor. 
+Auch hier ist kaum ein Einfluss des Wildschweinschrecks auf das Wildschwein zu erkennen. Dies bei einer Distanz zum Wildschweinschreck zu Zeitpunkt t2 von 884 Meter. Das Tier geht zwar kurzfristig etwas weiter weg, kommt dann aber zurück und hält sich sogar noch näher beim Schreck auf, als davor. 
 
 ```{r Distanz zum WWS zum Zeitpunkt des ersten Tons Sabine-WSS 2015_01}
 Sabine_t2_t3_01_2d$distance_2015_01[1]
 ```
 
-Deshalb wird zum Schluss noch  Olga und ihre Reaktion auf den potenziell beeinflussbaren Wildschweinschreck *2015_01* untersucht. Hier wird erst einmal nur der Plot gezeigt, wo sich Olga fünf Stunden vor und nach dem ersten Alarmton befindet. Auch Sie scheint noch näher heranzugehen:
+Nun wird noch der dritte Wildschweinschreck, der einen Einlfluss auf Sabine haben könnte, untersucht. Dies ist Wildschweinschreck *2015_03*. Es zeigt sich gleich am Anfang, dass die Distanz hier zu gross wäre. Zum Zeitpunkt t2 liegt die Distanz zum Schreck bei über 2000 Meter:
+
+```{r Research Question 1 Sabine-WSS 2015_03, echo=F, results='hide', message=F, warning=F }
+# dasselbe Vorgehen einfach mit einem anderen Schreck: 
+schreck_agenda_2015_03 <- filter(schreck_agenda_relevant,id=="WSS_2015_03")
+t2_WSS_2015_03 <- min(schreck_agenda_2015_03$datum_on)
+t2_WSS_2015_03 <- t2_WSS_2015_03-minutes(150)
+t2_WSS_2015_03
+t1_WSS_2015_03_5h <- t2_WSS_2015_03-hours(5)
+t3_WSS_2015_03_5h <- t2_WSS_2015_03+hours(5)
+t1_WSS_2015_03_2d <- t2_WSS_2015_03-days(2)
+t3_WSS_2015_03_2d <- t2_WSS_2015_03+days(2)
+
+Sabine_t1_t2_03_5h <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_03_5h & DatetimeUTC <= t2_WSS_2015_03 )
+Sabine_t1_t2_03_2d <- Sabine%>%
+  filter(DatetimeUTC > t1_WSS_2015_03_2d & DatetimeUTC <= t2_WSS_2015_03 )
+
+Sabine_t2_t3_03_5h <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_03 & DatetimeUTC < t3_WSS_2015_03_5h )
+Sabine_t2_t3_03_2d <- Sabine%>%
+  filter(DatetimeUTC >= t2_WSS_2015_03 & DatetimeUTC < t3_WSS_2015_03_2d )
+```
+
+```{r Distanz zum WWS zum Zeitpunkt des ersten Tons Sabine-WSS 2015_03}
+Sabine_t2_t3_03_2d$distance_2015_03[1]
+```
+
+
+### Untersuchung Franz
+Bei Franz und dem Wildschwienschreck 2015_01 sieht es ähnlich aus, die Distanz liegt zum Zeitpunkt vom Ertönen des ersten Schrecksignals bei 1678 Meter zum Schreck. Entsprechend wird auf Laufanalyse im Zusammenhang mit diesem Schreck verzichtet. Die Distanz ist sehr lang. 
+
+```{r Research Question 1 Franz-WSS 2015_01, echo=F, results='hide', message=F, warning=F }
+# dasselbe Vorgehen einfach mit Franz und einem anderen Schreck: 
+
+Franz_t1_t2_01_5h <- Franz%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_5h & DatetimeUTC <= t2_WSS_2015_01 )
+Franz_t1_t2_01_2d <- Franz%>%
+  filter(DatetimeUTC > t1_WSS_2015_01_2d & DatetimeUTC <= t2_WSS_2015_01 )
+
+Franz_t2_t3_01_5h <- Franz%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_5h )
+Franz_t2_t3_01_2d <- Franz%>%
+  filter(DatetimeUTC >= t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_2d )
+```
+
+```{r Distanz zum WWS zum Zeitpunkt des ersten Tons Franz-WSS 2015_01}
+Franz_t2_t3_01_2d$distance_2015_01[1]
+```
+
+
+### Untersuchung Olga
+Zum Schluss wird noch  Olga und ihre Reaktion auf den potenziell beeinflussbaren Wildschweinschreck *2015_01* untersucht. Hier wird erst einmal nur der Plot gezeigt, wo sich Olga fünf Stunden vor und nach dem ersten Alarmton befindet. Auch Sie scheint noch näher heranzugehen:
 
 ```{r Research Question 1 Olga-WSS_2015_01, echo=F, results='hide', message=F, warning=F }
 
@@ -249,11 +309,11 @@ Olga_t2_t3_01_5h <- Olga%>%
   filter(DatetimeUTC > t2_WSS_2015_01 & DatetimeUTC < t3_WSS_2015_01_5h )
 
 plot_5h_01_olg<-ggplot() +
-  geom_path(data = Olga_t1_t2_01_5h, aes(X,Y, color="5h before")) +
+  geom_path(data = Olga_t1_t2_01_5h, aes(X,Y, color="5h zuvor")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=+2)+
-  geom_path(data = Olga_t2_t3_01_5h, aes(X,Y, color="5h after")) +
-  labs(color="Trajectory", title = "Der Vergleich von Olga 5h vor und nach dem Schreck") +
+  geom_path(data = Olga_t2_t3_01_5h, aes(X,Y, color="5h danach")) +
+  labs(color="Laufweg", title = "Der Vergleich von Olga 5h vor und nach dem Schreck") +
   theme_minimal()
   
 plot_5h_01_olg
@@ -280,29 +340,29 @@ Olga_t2_t3_01_2d_nacht <- Olga_t2_t3_01_2d %>%
   filter(day != "Tag") 
 
 plot_olga_night_5h<-ggplot() +
-  geom_path(data = Olga_t1_t2_01_5h_nacht, aes(X,Y, color="5h before (here no day trips included)")) +
+  geom_path(data = Olga_t1_t2_01_5h_nacht, aes(X,Y, color="5h zuvor (kein Weg, da Tagestrips ausgeschlossen)")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4)+
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=-1)+
   geom_point(data = Olga_t2_t3_01_5h_nacht[18,], aes(X,Y),color="green",size=4)+
   geom_text(data = Olga_t2_t3_01_5h_nacht[18,], aes(X,Y,label=DatetimeUTC),hjust=+1,vjust=0)+
    geom_point(data = Olga_t2_t3_01_5h_nacht[1,], aes(X,Y),color="red",size=4)+
   geom_text(data = Olga_t2_t3_01_5h_nacht[1,], aes(X,Y,label=DatetimeUTC),hjust=+1,vjust=0)+
-  geom_path(data = Olga_t2_t3_01_5h_nacht, aes(X,Y, color="5 h after")) +
-  labs(color="Trajectory") +
+  geom_path(data = Olga_t2_t3_01_5h_nacht, aes(X,Y, color="5 h danach")) +
+  labs(color="Laufweg") +
   theme_minimal()+
   ylim(1204400,1205620)+
   theme(legend.position="bottom")
 
 plot_olga_night_2d<-ggplot() +
-  geom_path(data = Olga_t1_t2_01_2d_nacht, aes(X,Y, color="2 days before")) +
+  geom_path(data = Olga_t1_t2_01_2d_nacht, aes(X,Y, color="2 Tage zuvor")) +
   geom_point(data = schreck_agenda_2015_01, aes(X,Y),color="blue",shape="triangle", size=4) +
   geom_text(data = schreck_agenda_2015_01, aes(X,Y,label=id),hjust=+1,vjust=-1)+
   geom_point(data = Olga_t2_t3_01_2d_nacht[1,], aes(X,Y),color="red",size=4)+
   geom_point(data = Olga_t2_t3_01_2d_nacht[18,], aes(X,Y),color="green",size=4)+
   geom_text(data = Olga_t2_t3_01_2d_nacht[18,], aes(X,Y,label=DatetimeUTC),hjust=+1,vjust=0)+
   geom_text(data = Olga_t2_t3_01_2d_nacht[1,], aes(X,Y,label=DatetimeUTC),hjust=+1,vjust=0)+
-  geom_path(data = Olga_t2_t3_01_2d_nacht, aes(X,Y, color="2 days after")) +
-  labs(color="Trajectory") +
+  geom_path(data = Olga_t2_t3_01_2d_nacht, aes(X,Y, color="2 Tage danach")) +
+  labs(color="Laufweg") +
   theme_minimal()+
   ylim(1204400,1205620)+
   theme(legend.position="bottom")
@@ -318,4 +378,7 @@ Olga_t2_t3_01_2d_nacht$distance_2015_01[1]
 Olga_t2_t3_01_2d_nacht$distance_2015_01[18]
 ```
 
-Bei den gezeigten Plots zeigt sich kein Einfluss des Wildschweinschrecks auf die untersuchten Wildschweine. Die Tiere gehen trotz Alarm teilweise sogar noch näher an den Schreck heran, auch wenn sie sich innerhalb des potenziell hohen Einflussbereichs von rund 200 Meter befinden (Olga bis zu 73 Meter). Entsprechend kann der zweite Teil der Analyse, nämlich die Veränderung über die Zeit (z.B. durch Gewöhnung), nicht untersucht werden. Auch auf die weitere Untersuchung von Wildschweinen, die sich ebenfalls im potenziellen Einflussbereich der Wildschweinschrecks aufhalten wird verzichtet. Verlässliche Aussagen sind wohl mit dieser Analyse schwierig. 
+### Fazit Forschungsfrage 1
+Bei den gezeigten Plots zeigt sich kein Einfluss des Wildschweinschrecks auf die untersuchten Wildschweine. Die Tiere gehen trotz Alarm teilweise sogar noch näher an den Schreck heran, auch wenn sie sich innerhalb des potenziell hohen Einflussbereichs von rund 200 Meter befinden (Im Fall von Olga bis zu 73 Meter). Entsprechend kann der zweite Teil der Analyse aus Forschungsfrage 1, nämlich die Veränderung über die Zeit (z.B. durch Gewöhnung), nicht untersucht werden. 
+
+Vielleicht haben die Umweltbedingungen einen höheren Einfluss auf die Schweine als die alleinige Untersuchung des Schrecksignal-Einflusses. Dies wird mit der zweiten Forschungsfrage untersucht. 
